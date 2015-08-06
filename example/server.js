@@ -7,6 +7,7 @@ var cors        = require('cors');
 var decryptor   = require('../dist/index');//yocto-http-encrypt.js
 var path        = require('path');
 var base        = path.normalize(process.cwd());
+
 // view engine setup
 app.set('views', './views');
 app.set('view engine', 'jade');

@@ -1,8 +1,15 @@
 var _           = require('lodash');
 var logger      = require('yocto-logger');
+
+/**
+ * Midllewares for express 4+ to auto encrypt-decrypt base64
+ *
+ * @date 05/08/2015
+ * @author Cedric Balard <cedric#yocto.re>
+ */
+
 /**
  * Decrypt each data that present in req.body
- * @return {[type]} [description]
  */
 exports.decryptor = function(req, res, next) {
   logger.debug('-------------------------------');
@@ -40,8 +47,7 @@ exports.decryptor = function(req, res, next) {
 
 
 /**
- * Encrypt data that be send to client except render request
- * @return {[type]} [description]
+ * Encrypt data that will be send to client except render request
  */
 exports.encryptor = function() {
 
@@ -55,8 +61,10 @@ exports.encryptor = function() {
       headers : res._headers
     };
 
+    //Save current Method
     res.realSend = res.send;
 
+    //Overide jsonp
     res.jsonp = function(statusOrBody, body) {
       if (arguments.length === 2) {
         responseObj.status = statusOrBody;
@@ -66,11 +74,14 @@ exports.encryptor = function() {
         responseObj.body   = statusOrBody;
       }
 
+      //encrypte the data
       var b = new Buffer(JSON.stringify(responseObj.body));
       var encryptedData = b.toString('base64');
 
       logger.debug('[ encryptor ] - encryptedData : ');
       logger.debug(encryptedData);
+
+      //Do the send
       return res.realSend(encryptedData);
     };
 
