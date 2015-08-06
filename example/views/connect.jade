@@ -1,0 +1,17 @@
+html(data-ng-app="myApp", data-ng-strict-di)
+  head
+    base(href='/')
+    script(src='/bower_components/angular/angular.min.js')
+    script(src='/bower_components/angular-base64/angular-base64.min.js')
+    script(src='/public/app.js')
+  body
+    p Connection
+    div(ng-controller="formContr")
+      form(novalidate class="simple-form")
+        | email :   
+        input(type="text", ng-model="user.email")
+        p 
+        | password : 
+        input(type="password", ng-model="user.pwd")
+        p
+        input(type="button", value="Send", ng-click="send(user)")

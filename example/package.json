@@ -1,0 +1,20 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.13.3",
+    "cors": "^2.7.1",
+    "express": "^4.13.3",
+    "jade": "^1.11.0",
+    "lodash": "^3.10.0",
+    "yocto-logger": "git+ssh://git@lab.yocto.digital:yocto-node-modules/yocto-logger.git"
+  }
+}

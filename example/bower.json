@@ -1,0 +1,15 @@
+{
+  "name": "example",
+  "version": "0.0.0",
+  "authors": [
+    "Balard Cedric <cedric.balard@yocto.re>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
