@@ -4,7 +4,7 @@ var app         = express();
 var logger      = require('yocto-logger');
 var bodyParser  = require('body-parser');
 var cors        = require('cors');
-var decryptor   = require('../src/yocto-http-encrypt');
+var decryptor   = require('../dist/index');//yocto-http-encrypt.js
 var path        = require('path');
 var base        = path.normalize(process.cwd());
 // view engine setup

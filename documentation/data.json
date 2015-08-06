@@ -1,0 +1,101 @@
+{
+    "project": {
+        "name": "yocto-http-encrypt",
+        "description": "Middleware for ExpressJS that encrypt and decrypt all request based on base64",
+        "version": "1.0.0",
+        "url": "http://www.yocto.re"
+    },
+    "files": {
+        "src/index.js": {
+            "name": "src/index.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "http-encrypt.js": {
+            "name": "http-encrypt.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        }
+    },
+    "modules": {},
+    "classes": {},
+    "classitems": [
+        {
+            "file": "src/index.js",
+            "line": 3,
+            "description": "Decrypt each data that present in req.body",
+            "return": {
+                "description": "[description]",
+                "type": "[type]"
+            },
+            "class": ""
+        },
+        {
+            "file": "src/index.js",
+            "line": 42,
+            "description": "Encrypt data that be send to client except render request",
+            "return": {
+                "description": "[description]",
+                "type": "[type]"
+            },
+            "class": ""
+        },
+        {
+            "file": "http-encrypt.js",
+            "line": 4,
+            "description": "Middleware encryptor",
+            "date": "05/08/2015",
+            "class": ""
+        },
+        {
+            "file": "http-encrypt.js",
+            "line": 12,
+            "description": "Decrypt each data that present in req.body",
+            "return": {
+                "description": "[description]",
+                "type": "[type]"
+            },
+            "class": ""
+        },
+        {
+            "file": "http-encrypt.js",
+            "line": 37,
+            "description": "Encrypt data that be send to client except render request",
+            "return": {
+                "description": "[description]",
+                "type": "[type]"
+            },
+            "class": ""
+        }
+    ],
+    "warnings": [
+        {
+            "message": "unknown tag: date",
+            "line": " http-encrypt.js:4"
+        },
+        {
+            "message": "Missing item type\nDecrypt each data that present in req.body",
+            "line": " src/index.js:3"
+        },
+        {
+            "message": "Missing item type\nEncrypt data that be send to client except render request",
+            "line": " src/index.js:42"
+        },
+        {
+            "message": "Missing item type\nMiddleware encryptor",
+            "line": " http-encrypt.js:4"
+        },
+        {
+            "message": "Missing item type\nDecrypt each data that present in req.body",
+            "line": " http-encrypt.js:12"
+        },
+        {
+            "message": "Missing item type\nEncrypt data that be send to client except render request",
+            "line": " http-encrypt.js:37"
+        }
+    ]
+}

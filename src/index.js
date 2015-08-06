@@ -7,14 +7,14 @@ var logger      = require('yocto-logger');
 exports.decryptor = function(req, res, next) {
   logger.debug('-------------------------------');
   logger.debug('[ decryptor ] - new incoming request, encrypted body is : ');
-  console.log(req.body);
+  logger.debug(JSON.stringify(req.body));
 
   // Reg exp to base64
-  var reg = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$');
+  var reg = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
 
   _.each(req.body, function(val, key) {
-    // NOTE : a vérifier ne fonctionne peut etre pas coréctement
-    if (val.match(reg)) {
+    // Check if is an base64 with regexp and test if it's multiple of 4
+    if (val.match(reg) && val.length % 4 === 0) {
       var buff          = new Buffer(val, 'base64');
       var decryptedVal  = buff.toString();
 
@@ -30,11 +30,11 @@ exports.decryptor = function(req, res, next) {
       }
     }
     else {
-      console.log( key + ' is not a encode base 64');
+      logger.debug( key + ' is not a encode base 64');
     }
   });
   logger.debug('[ decryptor ]  - decrypted body is : ');
-  console.log(req.body);
+  logger.debug(req.body);
   next();
 };
 
@@ -70,7 +70,7 @@ exports.encryptor = function() {
       var encryptedData = b.toString('base64');
 
       logger.debug('[ encryptor ] - encryptedData : ');
-      console.log(encryptedData);
+      logger.debug(encryptedData);
       return res.realSend(encryptedData);
     };
 
