@@ -1,40 +1,46 @@
 {
   "name": "yocto-http-encrypt",
   "version": "1.0.0",
-  "description": "Middleware for ExpressJS that encrypt and decrypt all request based on base64",
-  "main": "index.js",
+  "description": "Encrypt and decrypt all request based on jwt webtoken",
+  "main": "dist/index.js",
   "private": true,
   "homepage": "http://www.yocto.re",
   "scripts": {},
   "author": {
-     "name": "Yocto SAS <http://www.yocto.re>"
-   },
-   "contributors": [
+    "name": "Yocto SAS <http://www.yocto.re>"
+  },
+  "contributors": [
     {
       "name": "BALARD Cédric",
       "email": "cedric@yocto.re"
     }
   ],
-  "main": "dist/index.js",
   "engines": {
-   "node": ">=0.12.2"
- },
- "repository": {
-   "type": "git",
-   "url": "git+ssh:://git@lab.yocto.digital:yocto-node-modules/yocto-http-encrypt.git"
- },
+    "node": ">=0.12.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh:://git@lab.yocto.digital:yocto-node-modules/yocto-http-encrypt.git"
+  },
   "dependencies": {
-    "lodash": "^3.10.0",
-    "yocto-logger": "git+ssh://git@lab.yocto.digital:yocto-node-modules/yocto-logger.git"
+    "jsonwebtoken": "^5.4.0",
+    "lodash": "^3.10.1",
+    "q": "^1.4.1",
+    "uuid": "^2.0.1",
+    "yocto-logger": "^1.0.4",
+    "yocto-utils": "^0.8.0"
   },
   "devDependencies": {
-    "grunt": "~0.4.5",
-    "grunt-contrib-jshint": "~0.10.0",
-    "grunt-contrib-uglify": "~0.5.0",
-    "grunt-contrib-yuidoc": "^0.7.0",
-    "grunt-mocha-cli": "^1.13.0"
+    "body-parser": "^1.14.1",
+    "cors": "^2.7.1",
+    "express": "^4.13.3",
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^0.11.3",
+    "grunt-jscs": "^2.1.0",
+    "jade": "^1.11.0",
+    "yocto-hint": "^1.1.6"
   },
-  "files" : [
+  "files": [
     "dist",
     "documentation",
     "example",

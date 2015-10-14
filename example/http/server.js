@@ -4,7 +4,7 @@ var app         = express();
 var logger      = require('yocto-logger');
 var bodyParser  = require('body-parser');
 var cors        = require('cors');
-var decryptor   = require('../dist/index');//yocto-http-encrypt.js
+var jwt         = require('../../src/')(logger);
 var path        = require('path');
 var base        = path.normalize(process.cwd());
 
@@ -19,8 +19,12 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 }));
 
 app.use(cors());
-app.use(decryptor.decryptor);
-app.use(decryptor.encryptor());
+//app.use(decryptor.decryptor);
+//app.use(decryptor.encryptor());
+jwt.setKey('12345');
+console.log(jwt.generateAccessToken());
+app.use(jwt.isAuthorized(jwt));
+app.use(jwt.autoEncryptRequest(jwt));
 
 // Configure app to angular and all bower_components
 app.use('/public', express.static(base + '/public'));
