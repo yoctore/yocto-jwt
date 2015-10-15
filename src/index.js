@@ -8,12 +8,16 @@ var jwt     = require('jsonwebtoken');
 var _       = require('lodash');
 var Q       = require('q');
 var utils   = require('yocto-utils');
+var crypto  = require('crypto');
 
+/**
+ * Manage jwt token and encryption
+ */
 function Jswb (logger) {
 
   /**
    * Default logger instance
-   * 
+   *
    * @property logger
    * @type Object
    */
@@ -44,7 +48,7 @@ function Jswb (logger) {
    * @type {String}
    * @default HS256
    */
-  this.usedAlgorithm    = 'HS256'
+  this.usedAlgorithm    = 'HS256';
 
   /**
    * Default auth header for express usage
@@ -70,15 +74,38 @@ Jswb.prototype.getKey = function () {
 };
 
 /**
+ * Retrieve access encrypt key
+ *
+ * @return {String} encrypt key
+ */
+Jswb.prototype.getAccessKey = function () {
+  // create hash
+  var hash = crypto.createHash('sha1').update(this.getKey()).digest('hex');
+
+  // default statement with key generation
+  return utils.crypto.encrypt(hash, this.getKey());
+};
+
+/**
  * Generate an access token
  *
- * @return {String} encoded access token
+ * @return {String|Boolean} encoded access token
  */
 Jswb.prototype.generateAccessToken = function (name) {
+  // is ready ?
+  if (!this.isReady()) {
+    // error message
+    this.logger.error([ '[ Jswb.generateAccessToken ] -',
+                        'Cannot sign your data. Encrypt key is not set' ].join(' '));
+    // invalid statement
+    return false;
+  }
+
   // define default name
-  name = _.isString(name) && !_.isEmpty(name) ? name : uuid.v4();
+  name    = _.isString(name) && !_.isEmpty(name) ? name : uuid.v4();
+
   // default statement
-  return this.sign({ name : name, date : Date.now() });
+  return this.sign({ name : name, date : Date.now(), key : this.getAccessKey() });
 };
 
 /**
@@ -97,7 +124,7 @@ Jswb.prototype.isAuthorized = function (context) {
         // debug message
         context.logger.debug('[ Jswb.algorithm ] - checking access on server.');
         // get token
-        var token = req.get(context.headers.access);
+        var token = req.get(context.headers.access.toLowerCase());
 
         // token is undefined ?
         if (_.isUndefined(token)) {
@@ -106,9 +133,18 @@ Jswb.prototype.isAuthorized = function (context) {
         } else {
           // process verify
           context.verify(token).then(function (decoded) {
-            // next process all is ok
-            console.log('decoded => ', decoded);
-            return next();
+            // all is ok so check key content
+            var akey  = crypto.createHash('sha1').update(context.getKey()).digest('hex');
+            var bkey  = utils.crypto.decrypt(akey, decoded.key.toString());
+
+            // check is key is equals ?
+            if (bkey === context.getKey()) {
+              // next process key match
+              return next();
+            } else {
+              // invalid key
+              return res.status(403).send('Invalid Token.');
+            }
           }).catch(function (error) {
             // is expired ?
             if (_.has(error, 'expiredAt')) {
@@ -132,7 +168,6 @@ Jswb.prototype.isAuthorized = function (context) {
   };
 };
 
-// TODO implement base json method
 /**
  * Enable auto encryption for json request
  *
@@ -145,29 +180,37 @@ Jswb.prototype.autoEncryptRequest = function (context) {
     // testing data
     if (_.isObject(req) && _.isObject(res)) {
 
-      // rebuild jsonp
-      var _jsonp  = res.jsonp;
+      // witch method we need to overide
+      var mtds  = [ 'json', 'jsonp' ];
 
-      // rewrite jsonp function
-      res.jsonp = function (body) {
-        // debug message
-        context.logger.debug([ '[ Jswb.algorithm ] - Receiving new data to encrypt : ',
-                               utils.obj.inspect(body)
-                             ].join(' '));
-        // set header
-        this.header(context.headers.encode, context.getKey());
+      // parse methods to process
+      _.each(mtds, function (m) {
+        // rebuild jsonp
+        var mcall  = res[m];
 
-        // default statement
-        return _jsonp.call(this, [ context.sign(body) ]);
-      };
+        // rewrite jsonp function
+        res[m] = function (body) {
+          // debug message
+          context.logger.debug([ '[ Jswb.algorithm ] - Receiving new data to encrypt : ',
+                                 utils.obj.inspect(body)
+                               ].join(' '));
+          // only if status code is valid
+          if (this.statusCode === 200) {
+            // set header
+            this.header(context.headers.encode.toLowerCase(), context.getKey());
+          }
 
+          // default statement
+          return mcall.call(this, [ context.sign(body) ]);
+        };
+      }, context);
     }
     // next statement
     return next();
   };
 };
 
-Jswb.prototype.autoDecryptRequest = function (context) {
+Jswb.prototype.autoDecryptRequest = function () {
   // default statement
   return function (req, res, next) {
     // next statement
@@ -206,7 +249,7 @@ Jswb.prototype.algorithm = function (value) {
  * Default function to set encryption key
  *
  * @param {String} keyOrPath key or path to use for encryption
- * @param {Boolean} file, set to true if given key is a file for content reading
+ * @param {Boolean} file set to true if given key is a file for content reading
  * @return {Boolean} true if all is ok false otherwise
  */
 Jswb.prototype.setKey = function (keyOrPath, file) {
@@ -277,7 +320,7 @@ Jswb.prototype.verify = function (data, remove) {
         // decoded data
         decoded = context.removeJwtKey(decoded);
       }
-      // ok so resolve 
+      // ok so resolve
       deferred.resolve(decoded);
     }
   });
@@ -322,7 +365,7 @@ Jswb.prototype.sign = function (data, options) {
     } else {
       // message
       this.logger.info([ '[ Jswb.sign ] - custom valid algorithm given in options.',
-                         'Use', options.algorithm, 'for encryption' ].join(' ')); 
+                         'Use', options.algorithm, 'for encryption' ].join(' '));
     }
   }
 
@@ -334,7 +377,7 @@ Jswb.prototype.sign = function (data, options) {
  * Utility function to remove added jwt key on data
  *
  * @param {Object|String} data object to process
- * @param {Object|String}  data given without key
+ * @return {Object|String} data given without key
  */
 Jswb.prototype.removeJwtKey = function (data) {
   // remove add item ?
@@ -342,7 +385,7 @@ Jswb.prototype.removeJwtKey = function (data) {
     var omits = [ 'iss', 'sub', 'aud', 'exp', 'nbf', 'iat', 'jti' ];
 
     // omit all items
-    _.each(omits, function(o) {
+    _.each(omits, function (o) {
       data = _.omit(data, o);
     });
   }
@@ -356,7 +399,7 @@ Jswb.prototype.removeJwtKey = function (data) {
  *
  * @param {Object} data data to verify
  * @param {Boolean} remove true if we need to remove added jwt key, false otherwise
- * @return {String} signed data
+ * @return {String|Boolean} signed data
  */
 Jswb.prototype.decode = function (data, remove) {
   // is ready ?

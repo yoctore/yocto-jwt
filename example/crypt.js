@@ -82,6 +82,8 @@ c.algorithm('AA4');
 //c.algorithm('HS384');
 // set key
 if (c.setKey(key)) {
+  var accessToken = c.generateAccessToken();
+  console.log('AccessToken =>', accessToken);
   var signed  = c.sign(data, { algorithm : 'HS384' });
   console.log('Signed => ', signed);
   var decoded = c.decode(signed);

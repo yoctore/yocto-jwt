@@ -22,7 +22,7 @@ app.use(cors());
 //app.use(decryptor.decryptor);
 //app.use(decryptor.encryptor());
 jwt.setKey('12345');
-console.log(jwt.generateAccessToken());
+console.log('A TOKEN => ', jwt.generateAccessToken());
 app.use(jwt.isAuthorized(jwt));
 app.use(jwt.autoEncryptRequest(jwt));
 
@@ -41,7 +41,7 @@ app.post('/login', function(req, res) {
 
   } else {
     console.log("connect failed");
-    res.status(400).jsonp({ message : 'connect Failed' });
+    res.status(400).json({ message : 'connect Failed' });
   }
 });
 

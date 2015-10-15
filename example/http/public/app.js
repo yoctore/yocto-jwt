@@ -17,7 +17,7 @@ angular.module('myApp', []).controller('formContr', ['$scope', '$http', function
     console.log('\n --------------------- encoded data = ');
     console.log(data);
     console.log('-------------------- send request : ');
-var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiODE3YWFjZjMtMDg5My00ZWMxLWExYWYtNzE4ZmNkYmNhNDE1IiwiZGF0ZSI6MTQ0NDg1Nzk5ODYzMCwiaWF0IjoxNDQ0ODU3OTk4fQ.bRBdIXgo_30Vm5WgeHaw239MJxdqtomj4_TP9lCps6U';
+var token = '  eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiMmUyMjg1YjUtNjQyMS00MWNhLWEzMmMtM2RmYTE2NzJlZTA3IiwiZGF0ZSI6MTQ0NDkwMzcyMDg3Mywia2V5IjoiN2MzYzM5ZDc4MTgwYTk4MGNjOTQ3MGM1MjFlMjk5NGEiLCJpYXQiOjE0NDQ5MDM3MjB9.YmAT_iRVYU4JpbUn1N1G03guwthwT4Tk3n0UlVGbnEE';
   $http({
     url: 'http://localhost:3000/login',
     method: 'POST',
