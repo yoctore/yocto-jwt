@@ -4,7 +4,7 @@ This module manage web token process on your app or can use like a crypt tools.
 
 We can use it like a middleware to encrypt and decrypt all json request just with a preconfigured key.
 
-You can 
+You can also check for each json request if request is allow.
 
 **!!! IMPORTANT !!! Please read [auth0/node-jsonwebtoken](https://github.com/auth0/node-jsonwebtoken) for key usage.**
 
@@ -86,8 +86,18 @@ if (c.setKey(key)) {
 
 ## Middleware usage
 
+To decrypt json data encrypted by the server, your front app must catch the header property : `x-jwt-decode-token`
+and use a jwt process on your font app.
+
+If you are using AngularJs you can use our middleware [yocto-angular-jwt](https://gitlab.com/yocto-angular-modules/yocto-angular-jwt.git)
+that provide to you a tool that can manage request processed with [yocto-jwt](https://gitlab.com/yocto-node-modules/yocto-jwt.git)
+
 ```javascript
 var jwt = require('yocto-jwt');
+var express     = require('express');
+var app         = express();
+
+// setup your express ...
 
 // set key
 jwt.setKey('12345');
@@ -100,8 +110,17 @@ app.use(jwt.autoDecryptRequest(jwt));
 ```
 
 ## How to auto filter json request access
+
+To use this feature your front app must send with current json request a specific header : `x-jwt-access-token`.
+
+This header must contain a valid token generate by the server. 
+
 ```javascript
 var jwt = require('yocto-jwt');
+var express     = require('express');
+var app         = express();
+
+// setup your express ...
 
 // set key
 jwt.setKey('12345');
