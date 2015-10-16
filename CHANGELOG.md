@@ -1,4 +1,10 @@
-## 1.0.0 (2015-10-14)
+## 1.0.0 (2015-10-16)
+
+- Add auto decrypt method
+- Fix minor bugs on generateAccessToken
+- Prepare to npm publish
+
+## 0.1.0 > 0.5.0 (2015-10-14)
 
 - Rewrite all code module
 - Add jwt module for encryption

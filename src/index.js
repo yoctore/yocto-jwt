@@ -191,7 +191,7 @@ Jswb.prototype.autoEncryptRequest = function (context) {
         // rewrite jsonp function
         res[m] = function (body) {
           // debug message
-          context.logger.debug([ '[ Jswb.algorithm ] - Receiving new data to encrypt : ',
+          context.logger.debug([ '[ Jswb.autoEncryptRequest ] - Receiving new data to encrypt : ',
                                  utils.obj.inspect(body)
                                ].join(' '));
           // only if status code is valid
@@ -210,11 +210,44 @@ Jswb.prototype.autoEncryptRequest = function (context) {
   };
 };
 
-Jswb.prototype.autoDecryptRequest = function () {
+/**
+ * Auto decryption method. Decrypt json request
+ *
+ * @param {Object} context current context to use
+ * @return {Function} middleware function to use
+ */
+Jswb.prototype.autoDecryptRequest = function (context) {
   // default statement
   return function (req, res, next) {
-    // next statement
-    return next();
+    // is json
+    if (req.is('application/json')) {
+      // debug message
+      context.logger.debug([ '[ Jswb.autoDecryptRequest ] - Receiving new data to decrypt : ',
+                             utils.obj.inspect(req.body)
+                           ].join(' '));
+      // default body value
+      var body = req.body;
+      // process body data to correct format
+      if (_.isObject(req.body) && !_.isEmpty(req.body)) {
+        body = _.first(req.body);
+      }
+
+      // process verify
+      context.verify(body).then(function (decoded) {
+        // remove non needed key
+        req.body = context.removeJwtKey(decoded);
+        // next statement
+        next();
+      }).catch(function (error) {
+        // log message
+        context.logger.error([ '[ Jswb.autoDecryptRequest ] -', error ].join(' '));
+        // next statement
+        next();
+      });
+    } else {
+      // next statement
+      return next();
+    }
   };
 };
 

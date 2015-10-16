@@ -1,27 +1,57 @@
 {
-  "name": "yocto-http-encrypt",
+  "name": "yocto-jwt",
   "version": "1.0.0",
   "description": "Encrypt and decrypt all request based on jwt webtoken",
-  "main": "dist/index.js",
   "private": true,
-  "homepage": "http://www.yocto.re",
   "scripts": {},
   "author": {
-    "name": "Yocto SAS <http://www.yocto.re>"
+    "name": "Yocto SAS",
+    "email": "technique@yocto.re",
+    "url": "http://www.yocto.re"
   },
   "contributors": [
     {
-      "name": "BALARD Cédric",
+      "name": "ROBERT Mathieu",
+      "email": "mathieu@yocto.re"
+    },
+    {
+      "name": "BALARD Cedric",
       "email": "cedric@yocto.re"
     }
   ],
+  "maintainers": [
+    {
+      "name": "ROBERT Mathieu",
+      "email": "mathieu@yocto.re"
+    }
+  ],
+  "main" : "dist/index.js",
+  "license": "Apache-2.0",
   "engines": {
-    "node": ">=0.12.2"
+    "node": ">=4.2.1"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh:://git@lab.yocto.digital:yocto-node-modules/yocto-http-encrypt.git"
+    "url": "https://gitlab.com/yocto-node-modules/yocto-jwt.git"
   },
+  "bugs": {
+    "url": "https://gitlab.com/yocto-node-modules/yocto-jwt/issues"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "LICENSE-2.0.txt",
+    "README.md"
+  ],
+  "keywords": [
+    "jwt",
+    "token",
+    "express",
+    "crypto",
+    "secure",
+    "tool",
+    "request"
+  ],
   "dependencies": {
     "jsonwebtoken": "^5.4.0",
     "lodash": "^3.10.1",
@@ -41,11 +71,5 @@
     "grunt-mocha-cli": "^1.14.0",
     "jade": "^1.11.0",
     "yocto-hint": "^1.1.6"
-  },
-  "files": [
-    "dist",
-    "documentation",
-    "example",
-    "README.md"
-  ]
+  }
 }

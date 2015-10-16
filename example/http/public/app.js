@@ -4,10 +4,13 @@ angular.module('myApp', []).controller('formContr', ['$scope', '$http', function
 
   $scope.send = function(user) {
 
-    var data = {
+/*    var data = {
       email :  user.email,
       pwd   :  user.pwd
     };
+*/
+
+    var data = { 0 : 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZXNzYWdlIjoiIHdlbGNvbWUgdG8gdGhlIGhvbWUiLCJpYXQiOjE0NDQ5MTEwNjN9.QiUMYoGomQNz8hFl_vjK2iXRmBg1odOhspqvrleb3Dc' };
 
     //stringify and encode data
     /*data = {
