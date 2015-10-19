@@ -8,6 +8,8 @@ You can also check for each json request if request is allow.
 
 **!!! IMPORTANT !!! Please read [auth0/node-jsonwebtoken](https://github.com/auth0/node-jsonwebtoken) for key usage.**
 
+This module use [pem](https://www.npmjs.com/package/pem) package for private / web key usage
+
 ## Witch type of key works ?
 
 Your can use a simple secret key or a cert file, like explain [here](https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options) 
@@ -122,17 +124,21 @@ var app         = express();
 
 // setup your express ...
 
-// set key
-jwt.setKey('12345');
-
-// add autorize middleware for automatic check
-app.use(jwt.isAuthorized(jwt));
-
-// enable auto encrypt json request
-app.use(jwt.autoEncryptRequest(jwt));
-
-// enable auto decrypt json request
-app.use(jwt.autoDecryptRequest(jwt));
+jwt.load().then(function() {
+  // set key
+  jwt.setKey('12345');
+  
+  // add autorize middleware for automatic check
+  app.use(jwt.isAuthorized(jwt));
+  
+  // enable auto encrypt json request
+  app.use(jwt.autoEncryptRequest(jwt));
+  
+  // enable auto decrypt json request
+  app.use(jwt.autoDecryptRequest(jwt));
+}).catch(function (error) {
+  console.log(error);
+});
 ```
 
 ## How to generate an access token

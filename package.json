@@ -1,7 +1,7 @@
 {
   "name": "yocto-jwt",
-  "version": "1.0.0",
-  "description": "Encrypt and decrypt all request based on jwt webtoken",
+  "version": "1.1.0",
+  "description": "Manage jwt token, and encrypt/decrypt all request based on jwt webtoken and cert",
   "private": true,
   "scripts": {},
   "author": {
@@ -25,7 +25,7 @@
       "email": "mathieu@yocto.re"
     }
   ],
-  "main" : "dist/index.js",
+  "main": "dist/index.js",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=4.2.1"
@@ -50,15 +50,18 @@
     "crypto",
     "secure",
     "tool",
-    "request"
+    "request",
+    "ssl",
+    "openssl"
   ],
   "dependencies": {
     "jsonwebtoken": "^5.4.0",
     "lodash": "^3.10.1",
+    "pem": "^1.8.1",
     "q": "^1.4.1",
     "uuid": "^2.0.1",
     "yocto-logger": "^1.0.4",
-    "yocto-utils": "^0.8.0"
+    "yocto-utils": "^0.8.1"
   },
   "devDependencies": {
     "body-parser": "^1.14.1",

@@ -9,11 +9,12 @@ var _       = require('lodash');
 var Q       = require('q');
 var utils   = require('yocto-utils');
 var crypto  = require('crypto');
+var pem     = require('./modules/pem');
 
 /**
  * Manage jwt token and encryption
  */
-function Jswb (logger) {
+function Jswt (logger) {
 
   /**
    * Default logger instance
@@ -30,6 +31,25 @@ function Jswb (logger) {
    * @type {String}
    */
   this.encryptKey       = '';
+
+  /**
+   * Default secure key for authorized process
+   *
+   * @property secureKeys
+   * @type {Object}
+   */
+  this.secureKeys = {
+    // web shared key
+    publicKey     : '',
+    // private key
+    clientKey     : '',
+    // certificate value
+    certificate   : '',
+    // service key value
+    serviceKey    : '',
+    // csr
+    csr           : ''
+  };
 
   /**
    * Default algorithms list
@@ -64,48 +84,129 @@ function Jswb (logger) {
 }
 
 /**
+ * Process cert generation
+ *
+ * @return {Object} promise to catc
+ */
+Jswt.prototype.load = function () {
+  // create async process
+  var deferred  = Q.defer();
+  // save current context
+  var context   = this;
+
+  // load ptem date
+  pem.processJwt().then(function (success) {
+    // merge data
+    _.merge(context.secureKeys, success);
+    // resolve all is okay
+    deferred.resolve();
+  }).catch(function (error) {
+    deferred.reject(error);
+  });
+
+  // process certificate process
+  return deferred.promise;
+};
+
+/**
  * Retrieve encrypt key
  *
  * @return {String} encrypt key
  */
-Jswb.prototype.getKey = function () {
+Jswt.prototype.getKey = function () {
   // default statement
   return this.encryptKey;
 };
 
 /**
+ * Retrieve private key
+ *
+ * @return {String} private key
+ */
+Jswt.prototype.getPrivateKey = function () {
+  // default statement
+  return this.secureKeys.clientKey;
+};
+
+/**
+ * Retrieve public key
+ *
+ * @return {String} public key
+ */
+Jswt.prototype.getPublicKey = function () {
+  // default statement
+  return this.secureKeys.publicKey;
+};
+
+/**
  * Retrieve access encrypt key
  *
- * @return {String} encrypt key
+ * @return {String|Boolean} encrypt key
  */
-Jswb.prototype.getAccessKey = function () {
+Jswt.prototype.getAccessKey = function () {
+  // is ready ?
+  if (!this.isReady()) {
+    // error message
+    this.logger.error([ '[ Jswt.getAccessKey ] -',
+                        'Cannot get access key. Encrypt key is not set' ].join(' '));
+    // invalid statement
+    return false;
+  }
+
+  // private key is set ?
+  if (!pem.isReady()) {
+    // error message
+    this.logger.error([ '[ Jswt.getAccessKey ] -',
+                        'Cannot get access key. Certificate was not genrated.' ].join(' '));
+    // invalid statement
+    return false;
+  }
+
   // create hash
-  var hash = crypto.createHash('sha1').update(this.getKey()).digest('hex');
+  var hash = crypto.createHash('sha1').update(this.getPublicKey()).digest('hex');
 
   // default statement with key generation
-  return utils.crypto.encrypt(hash, this.getKey());
+  return utils.crypto.encrypt(hash, this.getPublicKey());
 };
 
 /**
  * Generate an access token
  *
+ * @param {String} name name to use in token generation
  * @return {String|Boolean} encoded access token
  */
-Jswb.prototype.generateAccessToken = function (name) {
+Jswt.prototype.generateAccessToken = function (name) {
   // is ready ?
   if (!this.isReady()) {
     // error message
-    this.logger.error([ '[ Jswb.generateAccessToken ] -',
-                        'Cannot sign your data. Encrypt key is not set' ].join(' '));
+    this.logger.error([ '[ Jswt.generateAccessToken ] -',
+                        'Cannot generate access token. Encrypt key is not set' ].join(' '));
     // invalid statement
     return false;
   }
 
+  // private key is set ?
+  if (!pem.isReady()) {
+    // error message
+    this.logger.error([ '[ Jswt.generateAccessToken ] -',
+                        'Cannot generate access token. Certificate was not genrated.' ].join(' '));
+    // invalid statement
+    return false;
+  }
+
+  // save access key for next process
+  var aKey    = this.getAccessKey();
   // define default name
-  name    = _.isString(name) && !_.isEmpty(name) ? name : uuid.v4();
+  name        = _.isString(name) && !_.isEmpty(name) ? name : uuid.v4();
+  // define expires value
+  var expires = name === aKey ? '1h' : '5m';
 
   // default statement
-  return this.sign({ name : name, date : Date.now(), key : this.getAccessKey() });
+  return this.sign({
+    name  : name,
+    date  : Date.now(),
+    key   : aKey
+  }, { expiresIn : expires });
 };
 
 /**
@@ -114,7 +215,7 @@ Jswb.prototype.generateAccessToken = function (name) {
  * @param {Object} context current context to use
  * @return {Function} middleware function to use
  */
-Jswb.prototype.isAuthorized = function (context) {
+Jswt.prototype.isAuthorized = function (context) {
   // default statement
   return function (req, res, next) {
     // testing data
@@ -122,7 +223,7 @@ Jswb.prototype.isAuthorized = function (context) {
       // is json request ?
       if (req.is('application/json')) {
         // debug message
-        context.logger.debug('[ Jswb.algorithm ] - checking access on server.');
+        context.logger.debug('[ Jswt.isAuthorized ] - checking access on server.');
         // get token
         var token = req.get(context.headers.access.toLowerCase());
 
@@ -134,13 +235,24 @@ Jswb.prototype.isAuthorized = function (context) {
           // process verify
           context.verify(token).then(function (decoded) {
             // all is ok so check key content
-            var akey  = crypto.createHash('sha1').update(context.getKey()).digest('hex');
+            var akey  = crypto.createHash('sha1').update(context.getPublicKey()).digest('hex');
             var bkey  = utils.crypto.decrypt(akey, decoded.key.toString());
 
-            // check is key is equals ?
-            if (bkey === context.getKey()) {
-              // next process key match
-              return next();
+            // is valid bkey
+            if (bkey !== false) {
+              // verify
+              pem.verify(context.secureKeys.certificate,
+                         context.secureKeys.clientKey).then(function () {
+                // debug message
+                context.logger.debug('[ Jswt.isAuthorized ] - given token seems to be valid');
+                // all is ok so next process
+                return next();
+              }).catch(function (error) {
+                // log warning message
+                context.logger.error([ '[ Jswt.isAuthorized ] - ', error ].join(' '));
+                // invalid key
+                return res.status(403).send('Invalid Token.');
+              });
             } else {
               // invalid key
               return res.status(403).send('Invalid Token.');
@@ -174,7 +286,7 @@ Jswb.prototype.isAuthorized = function (context) {
  * @param {Object} context current context to use
  * @return {Function} middleware function to use
  */
-Jswb.prototype.autoEncryptRequest = function (context) {
+Jswt.prototype.autoEncryptRequest = function (context) {
   // default statement
   return function (req, res, next) {
     // testing data
@@ -191,15 +303,9 @@ Jswb.prototype.autoEncryptRequest = function (context) {
         // rewrite jsonp function
         res[m] = function (body) {
           // debug message
-          context.logger.debug([ '[ Jswb.autoEncryptRequest ] - Receiving new data to encrypt : ',
+          context.logger.debug([ '[ Jswt.autoEncryptRequest ] - Receiving new data to encrypt : ',
                                  utils.obj.inspect(body)
                                ].join(' '));
-          // only if status code is valid
-          if (this.statusCode === 200) {
-            // set header
-            this.header(context.headers.encode.toLowerCase(), context.getKey());
-          }
-
           // default statement
           return mcall.call(this, [ context.sign(body) ]);
         };
@@ -216,13 +322,13 @@ Jswb.prototype.autoEncryptRequest = function (context) {
  * @param {Object} context current context to use
  * @return {Function} middleware function to use
  */
-Jswb.prototype.autoDecryptRequest = function (context) {
+Jswt.prototype.autoDecryptRequest = function (context) {
   // default statement
   return function (req, res, next) {
     // is json
     if (req.is('application/json')) {
       // debug message
-      context.logger.debug([ '[ Jswb.autoDecryptRequest ] - Receiving new data to decrypt : ',
+      context.logger.debug([ '[ Jswt.autoDecryptRequest ] - Receiving new data to decrypt : ',
                              utils.obj.inspect(req.body)
                            ].join(' '));
       // default body value
@@ -240,7 +346,7 @@ Jswb.prototype.autoDecryptRequest = function (context) {
         next();
       }).catch(function (error) {
         // log message
-        context.logger.error([ '[ Jswb.autoDecryptRequest ] -', error ].join(' '));
+        context.logger.error([ '[ Jswt.autoDecryptRequest ] -', error ].join(' '));
         // next statement
         next();
       });
@@ -257,7 +363,7 @@ Jswb.prototype.autoDecryptRequest = function (context) {
  * @param {String} value algo to use
  * @return {String} default algo to use
  */
-Jswb.prototype.algorithm = function (value) {
+Jswt.prototype.algorithm = function (value) {
   // is defined ?
   if (!_.isUndefined(value) && !_.isNull(value)) {
     // is string and a valid algorithm
@@ -265,10 +371,10 @@ Jswb.prototype.algorithm = function (value) {
       // set given value
       this.usedAlgorithm = value;
       // message
-      this.logger.info([ '[ Jswb.algorithm ] - set algorithm to', value ].join(' '));
+      this.logger.info([ '[ Jswt.algorithm ] - set algorithm to', value ].join(' '));
     } else {
       // message
-      this.logger.warning([ '[ Jswb.algorithm ] - invalid algorithm given. Keep algorithm to',
+      this.logger.warning([ '[ Jswt.algorithm ] - invalid algorithm given. Keep algorithm to',
                             this.usedAlgorithm
                           ].join(' '));
     }
@@ -285,7 +391,7 @@ Jswb.prototype.algorithm = function (value) {
  * @param {Boolean} file set to true if given key is a file for content reading
  * @return {Boolean} true if all is ok false otherwise
  */
-Jswb.prototype.setKey = function (keyOrPath, file) {
+Jswt.prototype.setKey = function (keyOrPath, file) {
   // set default for is file check
   file = _.isBoolean(file) ? file : false;
 
@@ -305,12 +411,31 @@ Jswb.prototype.setKey = function (keyOrPath, file) {
     // set value
     this.encryptKey = keyOrPath;
     // message
-    this.logger.info('[ Jswb.setKey ] - Setting key done.');
+    this.logger.info('[ Jswt.setKey ] - Setting key done.');
     // valid statement
     return _.isString(this.encryptKey) && !_.isEmpty(this.encryptKey);
   } else {
     // warning message invalid key
-    this.logger.warning('[ Jswb.setKey ] - Invalid key or path given.');
+    this.logger.warning('[ Jswt.setKey ] - Invalid key or path given.');
+  }
+
+  // invalid statement
+  return false;
+};
+
+/**
+ * Set private key for internal encryption
+ *
+ * @param {String} value key to use for private key
+ * @return {Boolean} true if all is ok false otherwise
+ */
+Jswt.prototype.setPrivateKey = function (value) {
+  // is a string ?
+  if (!_.isString(value) && !_.isEmpty(value)) {
+    // set key
+    this.privateKey = value;
+    // valid statement
+    return true;
   }
 
   // invalid statement
@@ -324,7 +449,7 @@ Jswb.prototype.setKey = function (keyOrPath, file) {
  * @param {Boolean} remove true if we need to remove added jwt key, false otherwise
  * @return {Object} default promise
  */
-Jswb.prototype.verify = function (data, remove) {
+Jswt.prototype.verify = function (data, remove) {
   // save context
   var context   = this;
   // create async process
@@ -333,9 +458,9 @@ Jswb.prototype.verify = function (data, remove) {
   // is ready ?
   if (!this.isReady()) {
     // error message
-    this.logger.error('[ Jswb.verify ] - Cannot sign your data. Encrypt key is not set');
+    this.logger.error('[ Jswt.verify ] - Cannot sign your data. Encrypt key is not set');
     // invalid statement
-    deferred.reject('[ Jswb.verify ] - Cannot sign your data. Encrypt key is not set');
+    deferred.reject('[ Jswt.verify ] - Cannot sign your data. Encrypt key is not set');
   }
 
   // check signature
@@ -343,7 +468,7 @@ Jswb.prototype.verify = function (data, remove) {
     // has error ?
     if (err) {
       // log error
-      context.logger.error([ '[ Jswb.verify ] - An error occured :',
+      context.logger.error([ '[ Jswt.verify ] - An error occured :',
                               err.message, err.expiredAt || '' ].join(' '));
       // reject verify is invalid
       deferred.reject(err);
@@ -367,7 +492,7 @@ Jswb.prototype.verify = function (data, remove) {
  *
  * @return {Boolean} true if all is ok false otherwise
  */
-Jswb.prototype.isReady = function () {
+Jswt.prototype.isReady = function () {
   // default statement
   return _.isString(this.encryptKey) && !_.isEmpty(this.encryptKey);
 };
@@ -378,11 +503,11 @@ Jswb.prototype.isReady = function () {
  * @param {Object} data data to verify
  * @return {String|Boolean} signed data
  */
-Jswb.prototype.sign = function (data, options) {
+Jswt.prototype.sign = function (data, options) {
   // is ready ?
   if (!this.isReady()) {
     // error message
-    this.logger.error('[ Jswb.sign ] - Cannot sign your data. Encrypt key is not set');
+    this.logger.error('[ Jswt.sign ] - Cannot sign your data. Encrypt key is not set');
     // invalid statement
     return false;
   }
@@ -397,7 +522,7 @@ Jswb.prototype.sign = function (data, options) {
       _.merge(options, { algorithm : this.algorithm() });
     } else {
       // message
-      this.logger.info([ '[ Jswb.sign ] - custom valid algorithm given in options.',
+      this.logger.info([ '[ Jswt.sign ] - custom valid algorithm given in options.',
                          'Use', options.algorithm, 'for encryption' ].join(' '));
     }
   }
@@ -412,7 +537,7 @@ Jswb.prototype.sign = function (data, options) {
  * @param {Object|String} data object to process
  * @return {Object|String} data given without key
  */
-Jswb.prototype.removeJwtKey = function (data) {
+Jswt.prototype.removeJwtKey = function (data) {
   // remove add item ?
   if (_.isObject(data) && !_.isEmpty(data)) {
     var omits = [ 'iss', 'sub', 'aud', 'exp', 'nbf', 'iat', 'jti' ];
@@ -434,11 +559,11 @@ Jswb.prototype.removeJwtKey = function (data) {
  * @param {Boolean} remove true if we need to remove added jwt key, false otherwise
  * @return {String|Boolean} signed data
  */
-Jswb.prototype.decode = function (data, remove) {
+Jswt.prototype.decode = function (data, remove) {
   // is ready ?
   if (!this.isReady()) {
     // error message
-    this.logger.error('[ Jswb.decode ] - Cannot sign your data. Encrypt key is not set');
+    this.logger.error('[ Jswt.decode ] - Cannot sign your data. Encrypt key is not set');
     // invalid statement
     return false;
   }
@@ -460,11 +585,11 @@ Jswb.prototype.decode = function (data, remove) {
 module.exports = function (l) {
   // is a valid logger ?
   if (_.isUndefined(l) || _.isNull(l)) {
-    logger.warning('[ Jswb.constructor ] - Invalid logger given. Use internal logger');
+    logger.warning('[ Jswt.constructor ] - Invalid logger given. Use internal logger');
     // assign
     l = logger;
   }
 
   // default statement
-  return new (Jswb)(l);
+  return new (Jswt)(l);
 };

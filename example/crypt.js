@@ -1,6 +1,5 @@
 var c = require('../src')();
 
-
 var data = { env: 'development',
   port: 3000,
   directory: 
@@ -81,23 +80,28 @@ c.algorithm('AA4');
 // set to HS384
 //c.algorithm('HS384');
 // set key
-if (c.setKey(key)) {
-  var accessToken = c.generateAccessToken();
-  console.log('AccessToken =>', accessToken);
-  var signed  = c.sign(data, { algorithm : 'HS384' });
-  console.log('Signed => ', signed);
-  var decoded = c.decode(signed);
-  console.log('Decoded => ', decoded);
-  var decoded = c.decode(signed, true);
-  console.log('Decoded WITH AUTO REMOVE => ', decoded);
-  var verify = c.verify(signed).then(function (dec) {
-    console.log('verify success =>', dec);
-  }).catch(function (err) {
-    console.log('verify error =>', err);
-  });
+c.load().then(function() {
+  if (c.setKey(key)) {
+    var accessToken = c.generateAccessToken();
+    console.log('AccessToken =>', accessToken);
+    var signed  = c.sign(data, { algorithm : 'HS384' });
+    console.log('Signed => ', signed);
+    var decoded = c.decode(signed);
+    console.log('Decoded => ', decoded);
+    var decoded = c.decode(signed, true);
+    console.log('Decoded WITH AUTO REMOVE => ', decoded);
+    var verify = c.verify(signed).then(function (dec) {
+      console.log('verify success =>', dec);
+    }).catch(function (err) {
+      console.log('verify error =>', err);
+    });
+  
+  } else {
+    // cannot set key
+    console.log('cannot set key');
+  }
+}).catch(function (error) {
+  console.log('e=>', error);
+});
 
-} else {
-  // cannot set key
-  console.log('cannot set key');
-}
 

@@ -1,3 +1,7 @@
+## 1.1.0 (2015-10-19)
+
+- Add PEM and cert usage on get accessToken
+
 ## 1.0.0 (2015-10-16)
 
 - Add auto decrypt method
