@@ -93,7 +93,7 @@ if (c.setKey(key)) {
 ## Middleware usage
 
 If you are using AngularJs you can use our middleware [yocto-angular-jwt](https://gitlab.com/yocto-angular-services/yocto-angular-jwt.git)
-that provide to you a tool that can manage request processed with [yocto-jwt](https://gitlab.com/yocto-node-modules/yocto-jwt.git)
+that provide to you a tool that can manage request processed with [yocto-jwt](https://www.npmjs.com/package/yocto-jwt)
 
 ```javascript
 var jwt = require('yocto-jwt');
@@ -143,7 +143,7 @@ jwt.load().then(function() {
 ```
 
 You can also use our AngularJs middleware [yocto-angular-jwt](https://gitlab.com/yocto-angular-services/yocto-angular-jwt.git)
-that provide to you a tool that can manage request processed with [yocto-jwt](https://gitlab.com/yocto-node-modules/yocto-jwt.git)
+that provide to you a tool that can manage request processed with [yocto-jwt](https://www.npmjs.com/package/yocto-jwt)
 
 ## How to generate an access token
 
