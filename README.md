@@ -143,9 +143,18 @@ that provide to you a tool that can manage request processed with [yocto-jwt](ht
 
 ## How to generate an access token
 
+You can also setup a route on your node server to refresh your access token.
+
+In this tools you must call `generateAccessToken` method to retrieve a new token.
+
+By default a token is valid 5 minutes.
+
 ```javascript
 var jwt = require('yocto-jwt');
 
 var token = jwt.generateAccessToken();
 ```
 
+## Next Step
+
+- Add method to change refresh delay & more
