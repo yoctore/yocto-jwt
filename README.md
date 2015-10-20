@@ -1,5 +1,9 @@
 ## Overview
 
+This module is a part of yocto node modules for NodeJS.
+
+Please see [our NPM repository](https://www.npmjs.com/~yocto) for complete list of available tools (completed day after day).
+
 This module manage web token process on your app or can use like a crypt tools.
 
 We can use it like a middleware to encrypt and decrypt all json request just with a preconfigured key.
