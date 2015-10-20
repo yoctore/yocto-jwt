@@ -138,6 +138,9 @@ jwt.load().then(function() {
 });
 ```
 
+You can also use our AngularJs middleware [yocto-angular-jwt](https://gitlab.com/yocto-angular-services/yocto-angular-jwt.git)
+that provide to you a tool that can manage request processed with [yocto-jwt](https://gitlab.com/yocto-node-modules/yocto-jwt.git)
+
 ## How to generate an access token
 
 ```javascript
