@@ -1,3 +1,7 @@
+## 1.2.0 (2015-10-20)
+
+- Add test on autoDecrypt method to ignore frontapp when we can share a key to not process verify.
+
 ## 1.1.0 (2015-10-19)
 
 - Add PEM and cert usage on get accessToken

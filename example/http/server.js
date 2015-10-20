@@ -46,7 +46,13 @@ jwt.load().then(function() {
       res.status(400).json({ message : 'connect Failed' });
     }
   });
-  
+
+  app.get('/token/refresh', function(req, res, next) {
+    var token = jwt.generateAccessToken();
+    console.log('Generate a new token =>', token);
+    res.status(200).send(token);
+  });
+
   app.get('/home', function(req, res, next) {
     res.status(200).jsonp({ message :' welcome to the home' });
   });

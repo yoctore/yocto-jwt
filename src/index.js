@@ -79,7 +79,8 @@ function Jswt (logger) {
    */
   this.headers          = {
     access : 'x-jwt-access-token',
-    encode : 'x-jwt-decode-token'
+    encode : 'x-jwt-decode-token',
+    ignore : 'x-jwt-ignore-decrypt'
   };
 }
 
@@ -327,6 +328,15 @@ Jswt.prototype.autoDecryptRequest = function (context) {
   return function (req, res, next) {
     // is json
     if (req.is('application/json')) {
+      // has ignore header ?
+      if (_.has(req.headers, context.headers.ignore) && req.headers[context.headers.ignore]) {
+        // debug message
+        context.logger.debug('[ Jswt.autoDecryptRequest ] - ignore header was sent. got to next');
+        // return here beacause ignore was set
+        return next();
+      }
+
+      // continue
       // debug message
       context.logger.debug([ '[ Jswt.autoDecryptRequest ] - Receiving new data to decrypt : ',
                              utils.obj.inspect(req.body)
@@ -463,25 +473,32 @@ Jswt.prototype.verify = function (data, remove) {
     deferred.reject('[ Jswt.verify ] - Cannot sign your data. Encrypt key is not set');
   }
 
-  // check signature
-  jwt.verify(data, this.encryptKey, function (err, decoded) {
-    // has error ?
-    if (err) {
-      // log error
-      context.logger.error([ '[ Jswt.verify ] - An error occured :',
-                              err.message, err.expiredAt || '' ].join(' '));
-      // reject verify is invalid
-      deferred.reject(err);
-    } else {
-      // remove add item ?
-      if (_.isBoolean(remove) && remove) {
-        // decoded data
-        decoded = context.removeJwtKey(decoded);
+  try {
+    // check signature
+    jwt.verify(data, this.encryptKey, function (err, decoded) {
+      // has error ?
+      if (err) {
+        // log error
+        context.logger.error([ '[ Jswt.verify ] - An error occured :',
+                                err.message, err.expiredAt || '' ].join(' '));
+        // reject verify is invalid
+        deferred.reject(err);
+      } else {
+        // remove add item ?
+        if (_.isBoolean(remove) && remove) {
+          // decoded data
+          decoded = context.removeJwtKey(decoded);
+        }
+        // ok so resolve
+        deferred.resolve(decoded);
       }
-      // ok so resolve
-      deferred.resolve(decoded);
-    }
-  });
+    });
+  } catch (error) {
+    // error message
+    this.logger.error([ '[ Jswt.verify ] - Cannot cerify your data :', error ].join(' '));
+    // reject
+    deferred.reject('Cannot cerify your data.');
+  }
 
   // default promise
   return deferred.promise;

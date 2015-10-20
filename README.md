@@ -88,10 +88,7 @@ if (c.setKey(key)) {
 
 ## Middleware usage
 
-To decrypt json data encrypted by the server, your front app must catch the header property : `x-jwt-decode-token`
-and use a jwt process on your font app.
-
-If you are using AngularJs you can use our middleware [yocto-angular-jwt](https://gitlab.com/yocto-angular-modules/yocto-angular-jwt.git)
+If you are using AngularJs you can use our middleware [yocto-angular-jwt](https://gitlab.com/yocto-angular-services/yocto-angular-jwt.git)
 that provide to you a tool that can manage request processed with [yocto-jwt](https://gitlab.com/yocto-node-modules/yocto-jwt.git)
 
 ```javascript
