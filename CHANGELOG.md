@@ -1,3 +1,7 @@
+## 1.3.0 (2015-10-20)
+
+- Test is given key is a file without the second arguments.
+
 ## 1.2.0 (2015-10-20)
 
 - Add test on autoDecrypt method to ignore frontapp when we can share a key to not process verify.

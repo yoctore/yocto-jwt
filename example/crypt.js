@@ -81,7 +81,7 @@ c.algorithm('AA4');
 //c.algorithm('HS384');
 // set key
 c.load().then(function() {
-  if (c.setKey(key)) {
+  if (c.setKey('fsdfds')) {
     var accessToken = c.generateAccessToken();
     console.log('AccessToken =>', accessToken);
     var signed  = c.sign(data, { algorithm : 'HS384' });

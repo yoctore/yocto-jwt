@@ -10,6 +10,7 @@ var Q       = require('q');
 var utils   = require('yocto-utils');
 var crypto  = require('crypto');
 var pem     = require('./modules/pem');
+var fs      = require('fs');
 
 /**
  * Manage jwt token and encryption
@@ -398,28 +399,44 @@ Jswt.prototype.algorithm = function (value) {
  * Default function to set encryption key
  *
  * @param {String} keyOrPath key or path to use for encryption
- * @param {Boolean} file set to true if given key is a file for content reading
  * @return {Boolean} true if all is ok false otherwise
  */
-Jswt.prototype.setKey = function (keyOrPath, file) {
-  // set default for is file check
-  file = _.isBoolean(file) ? file : false;
+Jswt.prototype.setKey = function (keyOrPath) {
+  // set default for is file value
+  var isFile = false;
 
   // is string ?
   if (_.isString(keyOrPath) && !_.isEmpty(keyOrPath)) {
     // is file
-    if (file) {
-      // is relative ?
-      if (!path.isAbsolute(keyOrPath)) {
-        // normalize path
-        keyOrPath = path.normalize([ process.cwd(), keyOrPath ].join('/'));
-      }
+    var savedKeyOrPath = keyOrPath;
+
+    // is relative ?
+    if (!path.isAbsolute(keyOrPath)) {
+      // normalize path
+      keyOrPath = path.normalize([ process.cwd(), keyOrPath ].join('/'));
+    }
+
+    // try here exception can be throwed
+    try {
+      // parse file
+      var parse   = fs.statSync(keyOrPath);
+      // change state
+      isFile      = parse.isFile();
+
+    } catch (e) {
+      // warn message
+      this.logger.warning('[ Jswt.setKey ] - key is not a file. Process key like a string.');
+    }
+
+    // is file ?
+    if (isFile) {
       // process file process
       keyOrPath = fs.readFileSync(keyOrPath);
     }
 
     // set value
-    this.encryptKey = keyOrPath;
+    this.encryptKey = isFile ? keyOrPath : savedKeyOrPath;
+
     // message
     this.logger.info('[ Jswt.setKey ] - Setting key done.');
     // valid statement
