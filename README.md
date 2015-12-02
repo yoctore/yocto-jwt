@@ -174,7 +174,7 @@ jwt.load().then(function() {
   // set key
   jwt.setKey('12345');
   // set ips rang ip is allowed and check with netmask
-  c.allowedIps([ '10.0.0.0/12', '192.168.1.134' ]);
+  jwt.allowedIps([ '10.0.0.0/12', '192.168.1.134' ]);
   // add autorize middleware for automatic check
   app.use(jwt.isAuthorized());
   
