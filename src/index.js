@@ -11,6 +11,7 @@ var utils   = require('yocto-utils');
 var crypto  = require('crypto');
 var pem     = require('./modules/pem');
 var fs      = require('fs');
+var Netmask = require('netmask').Netmask;
 
 /**
  * Manage jwt token and encryption
@@ -79,10 +80,20 @@ function Jswt (logger) {
    * @default X-ACCESS-TOKEN
    */
   this.headers          = {
-    access : 'x-jwt-access-token',
-    encode : 'x-jwt-decode-token',
-    ignore : 'x-jwt-ignore-decrypt'
+    access      : 'x-jwt-access-token',
+    encode      : 'x-jwt-decode-token',
+    ignore      : 'x-jwt-ignore-decrypt',
+    ignoreCheck : 'x-jwt-ignore-check'
   };
+
+  /**
+   * Default alowed ip storage
+   *
+   * @property ips
+   * @type {Array}
+   * @default [ '::1', '127.0.0.1' ]
+   */
+  this.ips = [ '::1', '127.0.0.1' ];
 }
 
 /**
@@ -93,16 +104,13 @@ function Jswt (logger) {
 Jswt.prototype.load = function () {
   // create async process
   var deferred  = Q.defer();
-  // save current context
-  var context   = this;
-
   // load ptem date
   pem.processJwt().then(function (success) {
     // merge data
-    _.merge(context.secureKeys, success);
+    _.merge(this.secureKeys, success);
     // resolve all is okay
     deferred.resolve();
-  }).catch(function (error) {
+  }.bind(this)).catch(function (error) {
     deferred.reject(error);
   });
 
@@ -212,83 +220,141 @@ Jswt.prototype.generateAccessToken = function (name) {
 };
 
 /**
+ * An utility method to add allowed ips on jwt
+ *
+ * @param {Array|String} ips array of ips or single ip to add
+ */
+Jswt.prototype.allowedIps = function (ips) {
+  // normalize ips add action
+  this.ips = _.uniq(_.flatten([ this.ips, _.isArray(ips) ? ips : [ ips ] ]));
+};
+
+/**
+ * Default method to check if current request ip is allowed
+ *
+ * @param {Object} req curren express request
+ * @return {Boolean} true if is allowed false otherwise
+ */
+Jswt.prototype.ipIsAllowed = function (req) {
+  // get current ip
+  var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+  // current regexp ip
+  var submask = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})$/;
+
+  // default found state
+  var allowed = false;
+
+  // parse all ip and build ip if is submask
+  _.every(this.ips, function (ips) {
+    // is submask
+    if (submask.test(ips)) {
+      var netmask = new Netmask(ips);
+      // continue
+      allowed = netmask.contains(ip);
+    } else {
+      // if not a submask so check directly if ip is on list
+      allowed = _.contains(this.ips, ip);
+    }
+    // stop when found
+    return allowed ? false : true;
+  }.bind(this));
+
+  // default statement
+  return allowed;
+};
+
+/**
  * Check if request is authorized
  *
- * @param {Object} context current context to use
  * @return {Function} middleware function to use
  */
-Jswt.prototype.isAuthorized = function (context) {
+Jswt.prototype.isAuthorized = function () {
   // default statement
   return function (req, res, next) {
     // testing data
     if (_.isObject(req) && _.isObject(res)) {
-      // is json request ?
-      if (req.is('application/json')) {
-        // debug message
-        context.logger.debug('[ Jswt.isAuthorized ] - checking access on server.');
-        // get token
-        var token = req.get(context.headers.access.toLowerCase());
 
-        // token is undefined ?
-        if (_.isUndefined(token)) {
-          // send unauthorized
-          return res.status(403).send('You d\'ont have access to this ressource.').end();
-        } else {
-          // process verify
-          context.verify(token).then(function (decoded) {
-            // all is ok so check key content
-            var akey  = crypto.createHash('sha1').update(context.getPublicKey()).digest('hex');
-            var bkey  = utils.crypto.decrypt(akey, decoded.key.toString());
+      // ip is allowed ?
+      if (this.ipIsAllowed(req)) {
+        // is json request ?
+        if (req.is('application/json') || req.method.toUpperCase() === 'GET') {
+          // has ignore header ?
+          if (_.has(req.headers, this.headers.ignoreCheck) &&
+                    req.headers[this.headers.ignoreCheck]) {
+            // debug message
+            this.logger.debug('[ Jswt.isAuthorized ] - ignore check header was sent. got to next');
+            // return here beacause ignore was set
+            return next();
+          }
 
-            // is valid bkey
-            if (bkey !== false) {
-              // verify
-              pem.verify(context.secureKeys.certificate,
-                         context.secureKeys.clientKey).then(function () {
-                // debug message
-                context.logger.debug('[ Jswt.isAuthorized ] - given token seems to be valid');
-                // all is ok so next process
-                return next();
-              }).catch(function (error) {
-                // log warning message
-                context.logger.error([ '[ Jswt.isAuthorized ] - ', error ].join(' '));
+          // debug message
+          this.logger.debug('[ Jswt.isAuthorized ] - checking access on server.');
+          // get token
+          var token = req.get(this.headers.access.toLowerCase());
+
+          // token is undefined ?
+          if (_.isUndefined(token)) {
+            // send unauthorized
+            return res.status(403).send('You d\'ont have access to this ressource.').end();
+          } else {
+            // process verify
+            this.verify(token).then(function (decoded) {
+              // all is ok so check key content
+              var akey  = crypto.createHash('sha1').update(this.getPublicKey()).digest('hex');
+              var bkey  = utils.crypto.decrypt(akey, decoded.key.toString());
+
+              // is valid bkey
+              if (bkey !== false) {
+                // verify
+                pem.verify(this.secureKeys.certificate,
+                           this.secureKeys.clientKey).then(function () {
+                  // debug message
+                  this.logger.debug('[ Jswt.isAuthorized ] - given token seems to be valid');
+                  // all is ok so next process
+                  return next();
+                }.bind(this)).catch(function (error) {
+                  // log warning message
+                  this.logger.error([ '[ Jswt.isAuthorized ] - ', error ].join(' '));
+                  // invalid key
+                  return res.status(403).send('Invalid Token.');
+                }.bind(this));
+              } else {
                 // invalid key
                 return res.status(403).send('Invalid Token.');
-              });
-            } else {
-              // invalid key
-              return res.status(403).send('Invalid Token.');
-            }
-          }).catch(function (error) {
-            // is expired ?
-            if (_.has(error, 'expiredAt')) {
-              // refresh token error
-              return res.status(403).send('Token has expired.');
-            }
-
-            // send unauthorized
-            return res.status(403).send([ 'Cannot validate your access.',
-                                          'Please retry.' ].join(' ')).end();
-          });
+              }
+            }.bind(this)).catch(function (error) {
+              // is expired ?
+              if (_.has(error, 'expiredAt')) {
+                // refresh token error
+                return res.status(403).send('Token has expired.');
+              }
+              // send unauthorized
+              return res.status(403).send([ 'Cannot validate your access.',
+                                            'Please retry.' ].join(' ')).end();
+            }.bind(this));
+          }
+        } else {
+          // next statement
+          return next();
         }
       } else {
-        // next statement
-        return next();
+        // send unauthorized
+        return res.status(403).send('You are not allowed to access to this ressource.').end();
       }
     } else {
       // next statement
       return next();
     }
-  };
+  }.bind(this);
 };
 
 /**
  * Enable auto encryption for json request
  *
- * @param {Object} context current context to use
  * @return {Function} middleware function to use
  */
-Jswt.prototype.autoEncryptRequest = function (context) {
+Jswt.prototype.autoEncryptRequest = function () {
   // default statement
   return function (req, res, next) {
     // testing data
@@ -302,6 +368,8 @@ Jswt.prototype.autoEncryptRequest = function (context) {
         // rebuild jsonp
         var mcall  = res[m];
 
+        // save current context here to keep safe response context
+        var context = this;
         // rewrite jsonp function
         res[m] = function (body) {
           // debug message
@@ -311,61 +379,61 @@ Jswt.prototype.autoEncryptRequest = function (context) {
           // default statement
           return mcall.call(this, [ context.sign(body) ]);
         };
-      }, context);
+      }, this);
     }
     // next statement
     return next();
-  };
+  }.bind(this);
 };
 
 /**
  * Auto decryption method. Decrypt json request
  *
- * @param {Object} context current context to use
  * @return {Function} middleware function to use
  */
-Jswt.prototype.autoDecryptRequest = function (context) {
+Jswt.prototype.autoDecryptRequest = function () {
   // default statement
   return function (req, res, next) {
     // is json
     if (req.is('application/json')) {
       // has ignore header ?
-      if (_.has(req.headers, context.headers.ignore) && req.headers[context.headers.ignore]) {
+      if (_.has(req.headers, this.headers.ignore) && req.headers[this.headers.ignore]) {
         // debug message
-        context.logger.debug('[ Jswt.autoDecryptRequest ] - ignore header was sent. got to next');
+        this.logger.debug('[ Jswt.autoDecryptRequest ] - ignore header was sent. got to next');
         // return here beacause ignore was set
         return next();
       }
 
       // continue
       // debug message
-      context.logger.debug([ '[ Jswt.autoDecryptRequest ] - Receiving new data to decrypt : ',
+      this.logger.debug([ '[ Jswt.autoDecryptRequest ] - Receiving new data to decrypt : ',
                              utils.obj.inspect(req.body)
                            ].join(' '));
       // default body value
       var body = req.body;
+
       // process body data to correct format
-      if (_.isObject(req.body) && !_.isEmpty(req.body)) {
+      if (req.body.length === 1 && _.first(req.body) && !_.isEmpty(_.first(req.body))) {
         body = _.first(req.body);
       }
 
       // process verify
-      context.verify(body).then(function (decoded) {
+      this.verify(body).then(function (decoded) {
         // remove non needed key
-        req.body = context.removeJwtKey(decoded);
+        req.body = this.removeJwtKey(decoded);
         // next statement
         next();
-      }).catch(function (error) {
+      }.bind(this)).catch(function (error) {
         // log message
-        context.logger.error([ '[ Jswt.autoDecryptRequest ] -', error ].join(' '));
+        this.logger.error([ '[ Jswt.autoDecryptRequest ] -', error ].join(' '));
         // next statement
         next();
-      });
+      }.bind(this));
     } else {
       // next statement
       return next();
     }
-  };
+  }.bind(this);
 };
 
 /**
@@ -477,8 +545,6 @@ Jswt.prototype.setPrivateKey = function (value) {
  * @return {Object} default promise
  */
 Jswt.prototype.verify = function (data, remove) {
-  // save context
-  var context   = this;
   // create async process
   var deferred  = Q.defer();
 
@@ -496,7 +562,7 @@ Jswt.prototype.verify = function (data, remove) {
       // has error ?
       if (err) {
         // log error
-        context.logger.error([ '[ Jswt.verify ] - An error occured :',
+        this.logger.error([ '[ Jswt.verify ] - An error occured :',
                                 err.message, err.expiredAt || '' ].join(' '));
         // reject verify is invalid
         deferred.reject(err);
@@ -504,12 +570,12 @@ Jswt.prototype.verify = function (data, remove) {
         // remove add item ?
         if (_.isBoolean(remove) && remove) {
           // decoded data
-          decoded = context.removeJwtKey(decoded);
+          decoded = this.removeJwtKey(decoded);
         }
         // ok so resolve
         deferred.resolve(decoded);
       }
-    });
+    }.bind(this));
   } catch (error) {
     // error message
     this.logger.error([ '[ Jswt.verify ] - Cannot cerify your data :', error ].join(' '));

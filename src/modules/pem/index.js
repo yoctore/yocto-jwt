@@ -21,9 +21,6 @@ Pem.prototype.processJwt = function () {
   // create default async process
   var deferred = Q.defer();
 
-  // save current context
-  var context   = this;
-
   // create certificate
   pem.createCertificate({ days : 1, selfSigned : true }, function (error, keys) {
     // default keys to return
@@ -42,7 +39,7 @@ Pem.prototype.processJwt = function () {
           _.merge(bkeys, pem);
 
           // change state before resolve
-          context.state = true;
+          this.state = true;
 
           // ok resolve with builded keys
           deferred.resolve(bkeys);
@@ -50,12 +47,12 @@ Pem.prototype.processJwt = function () {
           // reject error occured
           deferred.reject(error);
         }
-      });
+      }.bind(this));
     } else {
       // reject error occured
       deferred.reject(error);
     }
-  });
+  }.bind(this));
 
   // return default promise
   return deferred.promise;

@@ -1,6 +1,6 @@
 {
   "name": "yocto-jwt",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Manage jwt token, and encrypt/decrypt all request based on jwt webtoken and cert",
   "scripts": {},
   "author": {
@@ -56,6 +56,7 @@
   "dependencies": {
     "jsonwebtoken": "^5.4.1",
     "lodash": "^3.10.1",
+    "netmask": "^1.0.5",
     "pem": "^1.8.1",
     "q": "^1.4.1",
     "uuid": "^2.0.1",

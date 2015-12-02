@@ -1,3 +1,8 @@
+## 1.4.0 (2015-10-20)
+
+- update context usate
+- add and utility method to filter by ip
+
 ## 1.3.0 (2015-10-20)
 
 - Test is given key is a file without the second arguments.

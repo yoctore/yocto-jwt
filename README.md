@@ -106,10 +106,10 @@ var app         = express();
 jwt.setKey('12345');
 
 // enable auto encrypt json request
-app.use(jwt.autoEncryptRequest(jwt));
+app.use(jwt.autoEncryptRequest());
 
 // enable auto decrypt json request
-app.use(jwt.autoDecryptRequest(jwt));
+app.use(jwt.autoDecryptRequest());
 ```
 
 ## How to auto filter json request access
@@ -130,13 +130,13 @@ jwt.load().then(function() {
   jwt.setKey('12345');
   
   // add autorize middleware for automatic check
-  app.use(jwt.isAuthorized(jwt));
+  app.use(jwt.isAuthorized());
   
   // enable auto encrypt json request
-  app.use(jwt.autoEncryptRequest(jwt));
+  app.use(jwt.autoEncryptRequest());
   
   // enable auto decrypt json request
-  app.use(jwt.autoDecryptRequest(jwt));
+  app.use(jwt.autoDecryptRequest());
 }).catch(function (error) {
   console.log(error);
 });
@@ -157,6 +157,35 @@ By default a token is valid 5 minutes.
 var jwt = require('yocto-jwt');
 
 var token = jwt.generateAccessToken();
+```
+
+## How allow ip access
+
+By default only localhost are allowed (::1 & 127.0.0.1)
+
+```javascript
+var jwt = require('yocto-jwt');
+var express     = require('express');
+var app         = express();
+
+// setup your express ...
+
+jwt.load().then(function() {
+  // set key
+  jwt.setKey('12345');
+  // set ips rang ip is allowed and check with netmask
+  c.allowedIps([ '10.0.0.0/12', '192.168.1.134' ]);
+  // add autorize middleware for automatic check
+  app.use(jwt.isAuthorized());
+  
+  // enable auto encrypt json request
+  app.use(jwt.autoEncryptRequest());
+  
+  // enable auto decrypt json request
+  app.use(jwt.autoDecryptRequest());
+}).catch(function (error) {
+  console.log(error);
+});
 ```
 
 ## Next Step

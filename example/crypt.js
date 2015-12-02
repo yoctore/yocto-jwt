@@ -82,6 +82,11 @@ c.algorithm('AA4');
 // set key
 c.load().then(function() {
   if (c.setKey('fsdfds')) {
+    c.allowedIps('126.32.32.12');
+    c.allowedIps([ '126.32.32.12', '126.32.32.25', '126.32.32.30' ]);
+    c.allowedIps([ '10.0.0.0/12', '192.168.1.134' ]);
+    console.log('is allowed =>', c.ipIsAllowed({ headers : { 'x-forwarded-for' : '10.0.0.10' } }));
+    console.log('is allowed =>', c.ipIsAllowed({ headers : { 'x-forwarded-for' : '126.32.32.12' } }));
     var accessToken = c.generateAccessToken();
     console.log('AccessToken =>', accessToken);
     var signed  = c.sign(data, { algorithm : 'HS384' });
