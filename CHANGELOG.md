@@ -1,4 +1,8 @@
-## 1.4.2 (2015-10-20)
+## 1.4.2 (2015-12-03)
+
+- Go to next when body is empty patch / post request
+
+## 1.4.2 (2015-12-01)
 
 - Remove an unused filter
 

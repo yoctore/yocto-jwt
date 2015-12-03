@@ -412,23 +412,28 @@ Jswt.prototype.autoDecryptRequest = function () {
       // default body value
       var body = req.body;
 
-      // process body data to correct format
-      if (req.body.length === 1 && _.first(req.body) && !_.isEmpty(_.first(req.body))) {
-        body = _.first(req.body);
-      }
+      if (!_.isEmpty(body)) {
+        // process body data to correct format
+        if (req.body.length === 1 && _.first(req.body) && !_.isEmpty(_.first(req.body))) {
+          body = _.first(req.body);
+        }
 
-      // process verify
-      this.verify(body).then(function (decoded) {
-        // remove non needed key
-        req.body = this.removeJwtKey(decoded);
-        // next statement
-        next();
-      }.bind(this)).catch(function (error) {
-        // log message
-        this.logger.error([ '[ Jswt.autoDecryptRequest ] -', error ].join(' '));
-        // next statement
-        next();
-      }.bind(this));
+        // process verify
+        this.verify(body).then(function (decoded) {
+          // remove non needed key
+          req.body = this.removeJwtKey(decoded);
+          // next statement
+          next();
+        }.bind(this)).catch(function (error) {
+          // log message
+          this.logger.error([ '[ Jswt.autoDecryptRequest ] -', error ].join(' '));
+          // next statement
+          next();
+        }.bind(this));
+      } else {
+        // next process
+        return next();
+      }
     } else {
       // next statement
       return next();
