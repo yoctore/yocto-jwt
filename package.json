@@ -1,6 +1,6 @@
 {
   "name": "yocto-jwt",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Manage jwt token, and encrypt/decrypt all request based on jwt webtoken and cert",
   "scripts": {},
   "author": {

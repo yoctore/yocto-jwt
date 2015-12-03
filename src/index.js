@@ -278,7 +278,7 @@ Jswt.prototype.isAuthorized = function () {
       // ip is allowed ?
       if (this.ipIsAllowed(req)) {
         // is json request ?
-        if (req.is('application/json') || req.method.toUpperCase() === 'GET') {
+        if (req.is('application/json')) {
           // has ignore header ?
           if (_.has(req.headers, this.headers.ignoreCheck) &&
                     req.headers[this.headers.ignoreCheck]) {

@@ -1,3 +1,7 @@
+## 1.4.2 (2015-10-20)
+
+- Remove an unused filter
+
 ## 1.4.0 (2015-10-20)
 
 - update context usate
