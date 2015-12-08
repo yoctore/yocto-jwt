@@ -644,13 +644,12 @@ Jswt.prototype.sign = function (data, options) {
  */
 Jswt.prototype.removeJwtKey = function (data) {
   // remove add item ?
-  if (_.isObject(data) && !_.isEmpty(data)) {
+  if (_.isObject(data) && !_.isEmpty(data) && !_.isArray(data)) {
+    // omit rules only on object
     var omits = [ 'iss', 'sub', 'aud', 'exp', 'nbf', 'iat', 'jti' ];
 
-    // omit all items
-    _.each(omits, function (o) {
-      data = _.omit(data, o);
-    });
+    // omit no needed property
+    return _.omit(data, omits);
   }
 
   // default statement

@@ -1,3 +1,7 @@
+## 1.4.4 (2015-12-04)
+
+- Bug on array to remove jwt property on removeJWtKey
+
 ## 1.4.2 (2015-12-03)
 
 - Go to next when body is empty patch / post request
