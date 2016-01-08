@@ -249,17 +249,23 @@ Jswt.prototype.ipIsAllowed = function (req) {
   _.every(this.ips, function (ips) {
     // is submask
     if (submask.test(ips)) {
-      var netmask = new Netmask(ips);
-      // continue
-      allowed = netmask.contains(ip);
+      // try catch process ?
+      try {
+        var netmask = new Netmask(ips);
+        // continue
+        allowed = netmask.contains(ip);
+      } catch (e) {
+        // log error
+        this.logger.error([ '[ Jswt.ipIsAllowed - [', ip, 'Netmask error :', e.message ].join(' '));
+      }
     } else {
-      // if not a submask so check directly if ip is on list
-      allowed = _.contains(this.ips, ip);
+      // if not a submask so check directly if ip is on list or if is wilcard
+      allowed = _.contains(this.ips, ip) || ip === '*';
     }
     // stop when found
     return allowed ? false : true;
   }.bind(this));
-
+  console.log('allowed =>', allowed);
   // default statement
   return allowed;
 };

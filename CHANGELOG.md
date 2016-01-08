@@ -1,3 +1,7 @@
+## 1.4.5 (2015-12-07)
+
+- Add wildcard for allow website access
+
 ## 1.4.4 (2015-12-04)
 
 - Bug on array to remove jwt property on removeJWtKey
