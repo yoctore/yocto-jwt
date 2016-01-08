@@ -265,7 +265,7 @@ Jswt.prototype.ipIsAllowed = function (req) {
     // stop when found
     return allowed ? false : true;
   }.bind(this));
-  console.log('allowed =>', allowed);
+
   // default statement
   return allowed;
 };
