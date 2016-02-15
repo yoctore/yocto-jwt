@@ -1,3 +1,7 @@
+## 1.4.7 (2015-12-07)
+
+- Change test on wilward '*' definition
+
 ## 1.4.5 (2015-12-07)
 
 - Add wildcard for allow website access

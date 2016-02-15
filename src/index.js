@@ -247,8 +247,10 @@ Jswt.prototype.ipIsAllowed = function (req) {
 
   // parse all ip and build ip if is submask
   _.every(this.ips, function (ips) {
+    // allow all
+    allowed = ips === '*';
     // is submask
-    if (submask.test(ips)) {
+    if (!allowed && submask.test(ips)) {
       // try catch process ?
       try {
         var netmask = new Netmask(ips);
@@ -260,7 +262,7 @@ Jswt.prototype.ipIsAllowed = function (req) {
       }
     } else {
       // if not a submask so check directly if ip is on list or if is wilcard
-      allowed = _.contains(this.ips, ip) || ip === '*';
+      allowed = _.contains(this.ips, ip) || ips === '*';
     }
     // stop when found
     return allowed ? false : true;
