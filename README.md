@@ -1,4 +1,10 @@
+[![NPM](https://nodei.co/npm/yocto-jwt.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/yocto-jwt/)
+
 ![alt text](https://david-dm.org/yoctore/yocto-jwt.svg "Dependencies Status")
+[![Code Climate](https://codeclimate.com/github/yoctore/yocto-jwt/badges/gpa.svg)](https://codeclimate.com/github/yoctore/yocto-jwt)
+[![Test Coverage](https://codeclimate.com/github/yoctore/yocto-jwt/badges/coverage.svg)](https://codeclimate.com/github/yoctore/yocto-jwt/coverage)
+[![Issue Count](https://codeclimate.com/github/yoctore/yocto-jwt/badges/issue_count.svg)](https://codeclimate.com/github/yoctore/yocto-jwt)
+[![Build Status](https://travis-ci.org/yoctore/yocto-jwt.svg?branch=master)](https://travis-ci.org/yoctore/yocto-jwt)
 
 ## Overview
 
