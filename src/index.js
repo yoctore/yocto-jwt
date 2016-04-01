@@ -10,7 +10,6 @@ var Q       = require('q');
 var utils   = require('yocto-utils');
 var crypto  = require('crypto');
 var pem     = require('./modules/pem');
-var fs      = require('fs');
 var Netmask = require('netmask').Netmask;
 
 /**
