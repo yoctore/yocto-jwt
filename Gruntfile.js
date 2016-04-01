@@ -44,7 +44,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('yocto-hint');
 
   grunt.registerTask('hint', 'yoctohint');
-  grunt.registerTask('tests', 'mochacli');
-  grunt.registerTask('build', [ 'hint', 'tests', 'uglify' ]);
+  grunt.registerTask('test', 'mochacli');
+  grunt.registerTask('build', [ 'hint', 'test', 'uglify' ]);
   grunt.registerTask('default', 'build');
 };
