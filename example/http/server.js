@@ -28,19 +28,21 @@ jwt.load().then(function() {
   app.use(jwt.autoEncryptRequest(jwt));
   app.use(jwt.autoDecryptRequest(jwt));
 
+  jwt.addAllowedRoutes(/connect/);
+
   // Configure app to angular and all bower_components
   app.use('/public', express.static(base + '/public'));
   app.use('/bower_components',  express.static(base + '/bower_components'));
-  
+
   // Request to connect
   // email = 'toto' and pwd == 'aaaa'
   app.post('/login', function(req, res) {
     console.log('B in route =>', req.body);
     if (req.body.email == 'toto' && req.body.pwd == 'aaaa') {
       console.log("connect success");
-  
+
       res.status(200).jsonp({ message : 'connect success' });
-  
+
     } else {
       console.log("connect failed");
       res.status(400).json({ message : 'connect Failed' });
@@ -56,20 +58,19 @@ jwt.load().then(function() {
   app.get('/home', function(req, res, next) {
     res.status(200).jsonp({ message :' welcome to the home' });
   });
-  
+
   // Return connect page
   app.get('/connect', function(req, res, next) {
     res.render('connect');
   });
-  
+
   var server = app.listen(3000, function() {
     var host = server.address().address;
     var port = server.address().port;
-  
+
     console.log('app start on port : ' +  port);
   });
 
 }).catch(function (error) {
   console.log(error);
 });
-

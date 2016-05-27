@@ -92,7 +92,7 @@ function Jswt (logger) {
    * @type {Array}
    * @default [ '::1', '127.0.0.1' ]
    */
-  this.ips = [ '::1', '127.0.0.1' ];
+  this.ips = [ '1', '::1', '127.0.0.1' ];
 
   /**
    * Array of routes to allowed without jwt validation
