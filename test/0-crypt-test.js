@@ -15,7 +15,7 @@ var data = require('./config.json');
 var key  = '123132136545646';
 
 var signed = {};
- 
+
 describe('Algorithm ->', function () {
   _.each(c.algorithms.reverse(), function (algo) {
     it ([ 'Set algorithm value to [', algo, '] must be valid'].join(''), function (done) {
@@ -49,11 +49,42 @@ describe('Algorithm ->', function () {
       });
   });
 
-  _.each([ { headers : { 'x-forwarded-for' : '10.0.0.10' } },
-    { headers : { 'x-forwarded-for' : '126.32.32.12' } } ], function (h) {
+  _.each([ /auth\/connect/ , [ /server\/status/, /server\/help/ ]], function (i) {
+      it ([ 'Setting allowedRoutes must succeed and contains those value :', i ].join(' '), function (done) {
+        c.addAllowedRoutes(i);
+        expect(c.allowedRoutes).to.include.members(_.flatten([ i ]));
+        done();
+      });
+  });
+
+  _.each(['10.0.0.10', '126.32.32.12' ], function (h) {
     it ([ 'Ip must be allowed for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
       expect(c.ipIsAllowed(h)).to.be.a.boolean;
       expect(c.ipIsAllowed(h)).to.be.equal(true);
+      done();
+    });
+  });
+
+  _.each(['18.0.0.10', '99.32.32.12' ], function (h) {
+    it ([ 'Ip must be refused for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
+      expect(c.ipIsAllowed(h)).to.be.a.boolean;
+      expect(c.ipIsAllowed(h)).to.be.equal(false);
+      done();
+    });
+  });
+
+  _.each([ '/auth/connect', '/server/help' ], function (h) {
+    it ([ 'Routes must be allowed for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
+      expect(c.isAllowedRoutes(h)).to.be.a.boolean;
+      expect(c.isAllowedRoutes(h)).to.be.equal(true);
+      done();
+    });
+  });
+
+  _.each([ '/test/test', '/server/details' ], function (h) {
+    it ([ 'Route must be refused for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
+      expect(c.isAllowedRoutes(h)).to.be.a.boolean;
+      expect(c.isAllowedRoutes(h)).to.be.equal(false);
       done();
     });
   });

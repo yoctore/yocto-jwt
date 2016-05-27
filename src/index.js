@@ -93,6 +93,14 @@ function Jswt (logger) {
    * @default [ '::1', '127.0.0.1' ]
    */
   this.ips = [ '::1', '127.0.0.1' ];
+
+  /**
+   * Array of routes to allowed without jwt validation
+   * All item should be regexp
+   *
+   * @type {Array}
+   */
+  this.allowedRoutes = [];
 }
 
 /**
@@ -229,14 +237,60 @@ Jswt.prototype.allowedIps = function (ips) {
 };
 
 /**
- * Default method to check if current request ip is allowed
+ * An utility method to add allowed routes that will be ignored to jwt check
  *
- * @param {Object} req curren express request
+ * @param {Array|String} allowedRoutes array of regexp route to allow
+ */
+Jswt.prototype.addAllowedRoutes = function (allowedRoutes) {
+  // normalize allowedRoutes add action
+  this.allowedRoutes = _.uniq(_.flatten([ this.allowedRoutes, _.isArray(allowedRoutes) ?
+  allowedRoutes : [ allowedRoutes ] ]));
+};
+
+/**
+ * Default method to check if the route of current request is allowed
+ *
+ * @param {Object} url url to check
  * @return {Boolean} true if is allowed false otherwise
  */
-Jswt.prototype.ipIsAllowed = function (req) {
-  // get current ip
-  var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+Jswt.prototype.isAllowedRoutes = function (url) {
+
+  var allowed = false;
+
+  // parse all allowed routes
+  _.every(this.allowedRoutes, function (route) {
+
+    // check if regexp match
+    if (_.isRegExp(route) && route.test(url)) {
+
+      allowed = true;
+
+      // log incomming error
+      this.logger.debug('[ Jswt.isAllowedRoutes ] - the url ' + url +
+      ' was authorized to connect without jwt validation with patern : ' + route);
+
+      // return false to break the _.every
+      return false;
+    }
+
+    // return true to continue the _.every
+    return true;
+  }.bind(this));
+
+  // default statement
+  return allowed;
+};
+
+/**
+ * Default method to check if current request ip is allowed
+ *
+ * @param {String} ip current ip form req
+ * @return {Boolean} true if is allowed false otherwise
+ */
+Jswt.prototype.ipIsAllowed = function (ip) {
+
+  // Remove unecessarry data
+  ip = _.trimLeft(ip, '::ffff:');
 
   // current regexp ip
   var submask = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})$/;
@@ -257,7 +311,8 @@ Jswt.prototype.ipIsAllowed = function (req) {
         allowed = netmask.contains(ip);
       } catch (e) {
         // log error
-        this.logger.error([ '[ Jswt.ipIsAllowed - [', ip, 'Netmask error :', e.message ].join(' '));
+        this.logger.error([ '[ Jswt.ipIsAllowed ] - ', ip, 'Netmask error :',
+                          e ].join(' '));
       }
     } else {
       // if not a submask so check directly if ip is on list or if is wilcard
@@ -282,8 +337,15 @@ Jswt.prototype.isAuthorized = function () {
     // testing data
     if (_.isObject(req) && _.isObject(res)) {
 
-      // ip is allowed ?
-      if (this.ipIsAllowed(req)) {
+      // get current ip
+      var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+      // log incomming request
+      this.logger.debug('[ Jswt.isAuthorized ] - a new request incoming into url : ' + req.url +
+      ' - from IP : ' + ip);
+
+      // ip is allowed or route is allowed ?
+      if (this.isAllowedRoutes(req.url) || this.ipIsAllowed(ip)) {
         // is json request ?
         if (req.is('application/json')) {
           // has ignore header ?
@@ -346,6 +408,11 @@ Jswt.prototype.isAuthorized = function () {
           return next();
         }
       } else {
+
+        // log incomming error
+        this.logger.debug('[ Jswt.isAuthorized ] - request to url : ' + req.url +
+        ' is NOT allowed for IP : ' + ip);
+
         // send unauthorized
         return res.status(403).send('You are not allowed to access to this ressource.').end();
       }

@@ -1,3 +1,9 @@
+## 1.6.0 (2016-05-27)
+
+- Now route can be ignore to jwt validation -> addAllowedRoutes()
+- Ip will be trimed for ':::ffff:'
+- Add more log information
+
 ## 1.4.7 (2015-12-07)
 
 - Change test on wilward '*' definition

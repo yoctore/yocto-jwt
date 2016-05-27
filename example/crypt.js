@@ -2,7 +2,7 @@ var c = require('../src')();
 
 var data = { env: 'development',
   port: 3000,
-  directory: 
+  directory:
    [ { models: './example/models' },
      { controllers: './example/controllers' },
      { views: './example/views' },
@@ -11,58 +11,58 @@ var data = { env: 'development',
      { media: './example/public/media' } ],
   encrypt_key: { key: '6e67ae372ad6d85cfad1abc366823e28', type: 'hex' },
   a: 1,
-  app: 
+  app:
    { name: 'my AP DEV &&&&&& é\'é\'éèç!',
      stackError: false,
      session: { timeout: 30 } },
-  express: 
+  express:
    { jsonp: true,
      prettyHtml: true,
-     filter: 
+     filter:
       { rules: 'json|text|javascript|css|html',
         by: 'Content-Type',
         level: 9 },
      multipart: true,
-     methodOverride: 
+     methodOverride:
       [ '_method',
         'X-HTTP-Method',
         'X-HTTP-Method-Override',
         'X-Method-Override' ],
      viewEngine: 'handlebars',
-     session: 
+     session:
       { enable: true,
-        options: 
+        options:
          { secret: '15Octobre2014',
            name: 'totot LGT 5',
            genuuid: true,
            proxy: true,
            resave: false,
            saveUninitialized: true,
-           store: 
+           store:
             { instance: 'mongo',
               uri: 'mongodb://user:pass@host:port/dbname',
               type: 'uri' },
            cookie: { path: '/', httpOnly: false, secure: true, maxAge: null },
            rolling: false } },
-     vhost: 
+     vhost:
       { enable: true,
-        options: 
+        options:
          { url: 'myhosturl.url',
            aliases: [ 'alias.myhosturl.url' ],
            subdomains: true,
            http: { redirect: { type: 301, url: 'www.myurl.url', port: 80 } } } },
      json: { inflate: true, limit: '100kb', strict: true, type: 'json' },
-     urlencoded: 
+     urlencoded:
       { extended: true,
         inflate: true,
         limit: '100kb',
         parameterLimit: 1000,
         type: 'urlencoded' },
-     cookieParser: 
+     cookieParser:
       { enable: false,
         secret: 'yocto-cookie-parser-secret-key',
         options: {} },
-     security: 
+     security:
       { csrf: { key: '_csrf', secret: 'yocto-secret-key' },
         csp: {},
         xframe: 'SAMEORIGIN',
@@ -85,8 +85,20 @@ c.load().then(function() {
     c.allowedIps('126.32.32.12');
     c.allowedIps([ '126.32.32.12', '126.32.32.25', '126.32.32.30' ]);
     c.allowedIps([ '10.0.0.0/12', '192.168.1.134' ]);
-    console.log('is allowed =>', c.ipIsAllowed({ headers : { 'x-forwarded-for' : '10.0.0.10' } }));
-    console.log('is allowed =>', c.ipIsAllowed({ headers : { 'x-forwarded-for' : '126.32.32.12' } }));
+
+    c.addAllowedRoutes([ /auth\/toto/ ]);
+
+    c.addAllowedRoutes([ /auth\/connect/ ]);
+
+    console.log('is allowed routes ==> /auth/connect/efefe : ', c.isAllowedRoutes('/auth/connect/efefe'));
+    console.log('is allowed routes ==> /auth/assign/ ', c.isAllowedRoutes('/auth/assign/'));
+    console.log('is allowed routes ==> /auth/toto/aa ', c.isAllowedRoutes('/auth/toto/aa'));
+    console.log('is allowed routes ==> /auth/connect/efefe : ', c.isAllowedRoutes('/auth/connect/efefe'));
+
+    console.log('is allowed for :::ffff:10.0.0.10 =>', c.ipIsAllowed(':::ffff:10.0.0.10'));
+    console.log('is allowed =>', c.ipIsAllowed('10.0.0.10'));
+    console.log('is allowed =>', c.ipIsAllowed('126.32.32.12'));
+
     var accessToken = c.generateAccessToken();
     console.log('AccessToken =>', accessToken);
     var signed  = c.sign(data, { algorithm : 'HS384' });
@@ -100,7 +112,7 @@ c.load().then(function() {
     }).catch(function (err) {
       console.log('verify error =>', err);
     });
-  
+
   } else {
     // cannot set key
     console.log('cannot set key');
@@ -108,5 +120,3 @@ c.load().then(function() {
 }).catch(function (error) {
   console.log('e=>', error);
 });
-
-
