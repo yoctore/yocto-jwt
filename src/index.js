@@ -410,7 +410,7 @@ Jswt.prototype.isAuthorized = function () {
       } else {
 
         // log incomming error
-        this.logger.debug('[ Jswt.isAuthorized ] - request to url : ' + req.url +
+        this.logger.error('[ Jswt.isAuthorized ] - request to url : ' + req.url +
         ' is NOT allowed for IP : ' + ip);
 
         // send unauthorized

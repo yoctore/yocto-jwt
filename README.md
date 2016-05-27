@@ -24,7 +24,7 @@ This module use [pem](https://www.npmjs.com/package/pem) package for private / w
 
 ## Witch type of key works ?
 
-Your can use a simple secret key or a cert file, like explain [here](https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options) 
+Your can use a simple secret key or a cert file, like explain [here](https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options)
 
 For more details see usage examples below.
 
@@ -81,7 +81,7 @@ if (c.setKey(key)) {
   // decode proess
   var decoded = c.decode(signed);
   console.log('Decoded => ', decoded);
-  
+
   // decode with auto remove of jwt properties (iat, etc ...)
   var decoded = c.decode(signed, true);
   console.log('Decoded WITH AUTO REMOVE => ', decoded);
@@ -124,7 +124,7 @@ app.use(jwt.autoDecryptRequest());
 
 To use this feature your front app must send with current json request a specific header : `x-jwt-access-token`.
 
-This header must contain a valid token generate by the server. 
+This header must contain a valid token generate by the server.
 
 ```javascript
 var jwt = require('yocto-jwt');
@@ -136,13 +136,13 @@ var app         = express();
 jwt.load().then(function() {
   // set key
   jwt.setKey('12345');
-  
+
   // add autorize middleware for automatic check
   app.use(jwt.isAuthorized());
-  
+
   // enable auto encrypt json request
   app.use(jwt.autoEncryptRequest());
-  
+
   // enable auto decrypt json request
   app.use(jwt.autoDecryptRequest());
 }).catch(function (error) {
@@ -185,10 +185,40 @@ jwt.load().then(function() {
   jwt.allowedIps([ '10.0.0.0/12', '192.168.1.134' ]);
   // add autorize middleware for automatic check
   app.use(jwt.isAuthorized());
-  
+
   // enable auto encrypt json request
   app.use(jwt.autoEncryptRequest());
-  
+
+  // enable auto decrypt json request
+  app.use(jwt.autoDecryptRequest());
+}).catch(function (error) {
+  console.log(error);
+});
+```
+## How allow route without jwt verification
+
+By default none route is allowed.
+If the url of the request match an *allowedRoute* the ip of the caller will not be check
+
+```javascript
+var jwt = require('yocto-jwt');
+var express     = require('express');
+var app         = express();
+
+// setup your express ...
+jwt.load().then(function() {
+  // set key
+  jwt.setKey('12345');
+
+  // set allowed routes
+  jwt.addAllowedRoutes([ /auth\/connect/, /status/ ]);
+
+  // add autorize middleware for automatic check
+  app.use(jwt.isAuthorized());
+
+  // enable auto encrypt json request
+  app.use(jwt.autoEncryptRequest());
+
   // enable auto decrypt json request
   app.use(jwt.autoDecryptRequest());
 }).catch(function (error) {

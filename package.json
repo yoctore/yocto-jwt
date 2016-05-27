@@ -56,7 +56,7 @@
     "openssl"
   ],
   "dependencies": {
-    "jsonwebtoken": "^5.7.0",
+    "jsonwebtoken": "^7.0.0",
     "lodash": "^3.10.1",
     "netmask": "^1.0.5",
     "pem": "^1.8.1",
@@ -70,7 +70,7 @@
     "chai": "^3.5.0",
     "cors": "^2.7.1",
     "express": "^4.13.3",
-    "grunt": "^0.4.5",
+    "grunt": "^1.0.1",
     "grunt-contrib-uglify": "^1.0.1",
     "grunt-mocha-cli": "^2.0.0",
     "jade": "^1.11.0",

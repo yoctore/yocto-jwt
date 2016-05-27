@@ -3,6 +3,8 @@
 - Now route can be ignore to jwt validation -> addAllowedRoutes()
 - Ip will be trimed for ':::ffff:'
 - Add more log information
+- Update package.json
+- Change arguments for method ipIsAllowed(ip) -> ip is now a string
 
 ## 1.4.7 (2015-12-07)
 
