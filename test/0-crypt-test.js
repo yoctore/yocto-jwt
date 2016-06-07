@@ -49,7 +49,7 @@ describe('Algorithm ->', function () {
       });
   });
 
-  _.each([ /auth\/connect/ , [ /server\/status/, /server\/help/ ]], function (i) {
+  _.each([ '/auth/connect' , [ '/server\/status/', '/server\/help' ]], function (i) {
       it ([ 'Setting allowedRoutes must succeed and contains those value :', i ].join(' '), function (done) {
         c.addAllowedRoutes(i);
         expect(c.allowedRoutes).to.include.members(_.flatten([ i ]));
@@ -73,7 +73,7 @@ describe('Algorithm ->', function () {
     });
   });
 
-  _.each([ '/auth/connect', '/server/help' ], function (h) {
+  _.each([ '/auth/connect/standard/token=fefefoihfrognrgzrnglzknrzglrzkgnrgrzggzmjzr', '/auth/connect/', '/server/help' ], function (h) {
     it ([ 'Routes must be allowed for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
       expect(c.isAllowedRoutes(h)).to.be.a.boolean;
       expect(c.isAllowedRoutes(h)).to.be.equal(true);

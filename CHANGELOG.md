@@ -1,5 +1,10 @@
 ## 1.6.0 (2016-05-27)
 
+- Bug Fixe :
+  - When add an allowerRoutes, if string is not an RegExp, the string will be regexpected
+
+## 1.6.0 (2016-05-27)
+
 - Now route can be ignore to jwt validation -> addAllowedRoutes()
 - Ip will be trimed for ':::ffff:'
 - Add more log information

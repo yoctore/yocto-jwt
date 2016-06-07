@@ -86,9 +86,9 @@ c.load().then(function() {
     c.allowedIps([ '126.32.32.12', '126.32.32.25', '126.32.32.30' ]);
     c.allowedIps([ '10.0.0.0/12', '192.168.1.134' ]);
 
-    c.addAllowedRoutes([ /auth\/toto/ ]);
+    c.addAllowedRoutes([ '/auth\/toto/' ]);
 
-    c.addAllowedRoutes([ /auth\/connect/ ]);
+    c.addAllowedRoutes([ '/auth\/connect/' ]);
 
     console.log('is allowed routes ==> /auth/connect/efefe : ', c.isAllowedRoutes('/auth/connect/efefe'));
     console.log('is allowed routes ==> /auth/assign/ ', c.isAllowedRoutes('/auth/assign/'));

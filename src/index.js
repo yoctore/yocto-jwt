@@ -260,16 +260,24 @@ Jswt.prototype.isAllowedRoutes = function (url) {
   // parse all allowed routes
   _.every(this.allowedRoutes, function (route) {
 
-    // check if regexp match
-    if (_.isRegExp(route) && route.test(url)) {
+    try {
 
-      allowed = true;
+      route = _.isRegExp(route) ? route : new RegExp(route);
 
-      // log incomming error
-      this.logger.debug('[ Jswt.isAllowedRoutes ] - the url ' + url +
-      ' was authorized to connect without jwt validation with patern : ' + route);
+      // check if regexp match
+      if (route.test(url)) {
 
-      // return false to break the _.every
+        allowed = true;
+
+        // log incomming error
+        this.logger.debug('[ Jswt.isAllowedRoutes ] - the url ' + url +
+        ' was authorized to connect without jwt validation with patern : ' + route);
+
+        // return false to break the _.every
+        return false;
+      }
+    } catch (e) {
+
       return false;
     }
 
