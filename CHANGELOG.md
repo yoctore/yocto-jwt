@@ -1,4 +1,4 @@
-## 1.6.0 (2016-05-27)
+## 1.6.0 (2016-06-07)
 
 - Bug Fixe :
   - When add an allowerRoutes, if string is not an RegExp, the string will be regexpected
