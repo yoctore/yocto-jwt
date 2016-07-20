@@ -4,3 +4,5 @@ node_modules
 *~
 example/bower_components
 example/node_modules
+cert.pem
+cert-jwt.tmp

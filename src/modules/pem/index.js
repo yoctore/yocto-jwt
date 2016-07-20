@@ -3,6 +3,8 @@
 var pem = require('pem');
 var Q   = require('q');
 var _   = require('lodash');
+var fs  = require('fs');
+var path = require('path');
 
 /**
  * Manage Pem & Cert management
@@ -26,27 +28,44 @@ Pem.prototype.processJwt = function () {
     // default keys to return
     var bkeys = {};
     // has error ?
-
     if (!error) {
-      // merge secure keys
-      _.merge(bkeys, keys);
 
-      // generate public key
-      pem.getPublicKey(keys.certificate, function (error, pem) {
-        // has error ?
-        if (!error) {
-          // add new item
-          _.merge(bkeys, pem);
+      // create path of the file into cwd()
+      var pathFilePK = path.normalize(process.cwd() + '/cert-jwt.tmp');
 
-          // change state before resolve
-          this.state = true;
-
-          // ok resolve with builded keys
-          deferred.resolve(bkeys);
-        } else {
-          // reject error occured
-          deferred.reject(error);
+      // checck if file already exist to load it
+      fs.readFile(pathFilePK, function (err, data) {
+        // check if file not exist
+        if (err) {
+          // file not exsit so should wite the file
+          fs.writeFile(pathFilePK, JSON.stringify(keys), function (error) {
+            // check if an error occured when creating file
+            if (error) {
+              deferred.reject(error);
+            }
+          });
         }
+
+        // merge secure keys
+        _.merge(bkeys, _.isUndefined(data) ? keys : JSON.parse(data));
+
+        // generate public key
+        pem.getPublicKey(keys.certificate, function (error, pem) {
+          // has error ?
+          if (!error) {
+            // add new item
+            _.merge(bkeys, pem);
+
+            // change state before resolve
+            this.state = true;
+
+            // ok resolve with builded keys
+            deferred.resolve(bkeys);
+          } else {
+            // reject error occured
+            deferred.reject(error);
+          }
+        }.bind(this));
       }.bind(this));
     } else {
       // reject error occured
