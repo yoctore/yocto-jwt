@@ -57,6 +57,7 @@
   ],
   "dependencies": {
     "jsonwebtoken": "^7.0.0",
+    "lockfile": "^1.0.1",
     "lodash": "^3.10.1",
     "netmask": "^1.0.5",
     "pem": "^1.8.1",

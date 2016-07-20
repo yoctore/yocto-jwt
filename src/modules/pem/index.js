@@ -1,10 +1,11 @@
 'use strict';
 
-var pem = require('pem');
-var Q   = require('q');
-var _   = require('lodash');
-var fs  = require('fs');
-var path = require('path');
+var lockFile  = require('lockfile');
+var pem       = require('pem');
+var Q         = require('q');
+var _         = require('lodash');
+var fs        = require('fs');
+var path      = require('path');
 
 /**
  * Manage Pem & Cert management
@@ -32,49 +33,63 @@ Pem.prototype.processJwt = function () {
 
       // create path of the file into cwd()
       var pathFilePK = path.normalize(process.cwd() + '/cert-jwt.tmp');
+      var pathLockFile = path.normalize(process.cwd() + '/cert-jwt.lock');
 
-      // checck if file already exist to load it
-      fs.readFile(pathFilePK, function (err, data) {
-        // check if file not exist
-        if (err) {
-          // file not exsit so should wite the file
-          fs.writeFile(pathFilePK, JSON.stringify(keys), function (error) {
-            // check if an error occured when creating file
-            if (error) {
+      // Try to create an lockFile, it's usefull for Cluster mode to use the same pem file
+      lockFile.lock(pathLockFile, function (error) {
+
+        /**
+         * Method to set Pem file into jwt
+         *
+         * @param {Object} error Optional error if fs method fails
+         * @param {value} value Optional data for fs readFile fn
+         */
+        var setPemCb = function (error, value) {
+          // check error
+          if (error) {
+            // An error occured so reject it
+            return deferred.reject(error);
+          }
+
+          // Check if value exsit
+          keys = _.isUndefined(value) ? keys : JSON.parse(value);
+
+          // merge secure keys
+          _.merge(bkeys, keys);
+
+          // generate public key
+          pem.getPublicKey(keys.certificate, function (error, pem) {
+            // has error ?
+            if (!error) {
+              // add new item
+              _.merge(bkeys, pem);
+
+              // change state before resolve
+              this.state = true;
+
+              // ok resolve with builded keys
+              deferred.resolve(bkeys);
+            } else {
+              // reject error occured
               deferred.reject(error);
             }
-          });
+          }.bind(this));
+        }.bind(this);
+
+        // check if file already exist
+        if (error) {
+          // file exist so read them
+          fs.readFile(pathFilePK, setPemCb);
+        } else {
+          // file not exist so create them
+          fs.writeFile(pathFilePK, JSON.stringify(keys), setPemCb);
         }
-
-        keys = _.isUndefined(data) ? keys : JSON.parse(data);
-
-        // merge secure keys
-        _.merge(bkeys, keys);
-
-        // generate public key
-        pem.getPublicKey(keys.certificate, function (error, pem) {
-          // has error ?
-          if (!error) {
-            // add new item
-            _.merge(bkeys, pem);
-
-            // change state before resolve
-            this.state = true;
-
-            // ok resolve with builded keys
-            deferred.resolve(bkeys);
-          } else {
-            // reject error occured
-            deferred.reject(error);
-          }
-        }.bind(this));
       }.bind(this));
     } else {
       // reject error occured
       deferred.reject(error);
     }
   }.bind(this));
-
   // return default promise
   return deferred.promise;
 };
