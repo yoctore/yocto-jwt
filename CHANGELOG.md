@@ -1,3 +1,7 @@
+## 1.7.1 (2016-07-20)
+- Bug fixe :
+ - Use lockFile to avoid error on cluster mode
+
 ## 1.7.0 (2016-07-20)
 - Improvement :
  - On initialize pem, the file was write in a file on cwd() folder. It used for share pem file on cluster mode.
