@@ -46,8 +46,10 @@ Pem.prototype.processJwt = function () {
           });
         }
 
+        keys = _.isUndefined(data) ? keys : JSON.parse(data);
+
         // merge secure keys
-        _.merge(bkeys, _.isUndefined(data) ? keys : JSON.parse(data));
+        _.merge(bkeys, keys);
 
         // generate public key
         pem.getPublicKey(keys.certificate, function (error, pem) {
