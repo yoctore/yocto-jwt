@@ -80,9 +80,7 @@ function Jswt (logger) {
    */
   this.headers          = {
     access      : 'x-jwt-access-token',
-    encode      : 'x-jwt-decode-token',
-    ignore      : 'x-jwt-ignore-decrypt',
-    ignoreCheck : 'x-jwt-ignore-check'
+    encode      : 'x-jwt-decode-token'
   };
 
   /**
@@ -254,19 +252,19 @@ Jswt.prototype.addAllowedRoutes = function (allowedRoutes) {
  * @return {Boolean} true if is allowed false otherwise
  */
 Jswt.prototype.isAllowedRoutes = function (url) {
-
+  // Var used to determine if the route was allowed
   var allowed = false;
 
   // parse all allowed routes
   _.every(this.allowedRoutes, function (route) {
 
     try {
-
+      // retrieve the regexp
       route = _.isRegExp(route) ? route : new RegExp(route);
 
       // check if regexp match
       if (route.test(url)) {
-
+        // set true because the route match
         allowed = true;
 
         // log incomming error
@@ -277,7 +275,7 @@ Jswt.prototype.isAllowedRoutes = function (url) {
         return false;
       }
     } catch (e) {
-
+      // return false because not match or regexp constructor failed
       return false;
     }
 
@@ -352,68 +350,74 @@ Jswt.prototype.isAuthorized = function () {
       this.logger.debug('[ Jswt.isAuthorized ] - a new request incoming into url : ' + req.url +
       ' - from IP : ' + ip);
 
+      // Save result of is allowed routes
+      var isAllowedRoutes = this.isAllowedRoutes(req.url);
+
       // ip is allowed or route is allowed ?
-      if (this.isAllowedRoutes(req.url) || this.ipIsAllowed(ip)) {
-        // is json request ?
-        if (req.is('application/json')) {
-          // has ignore header ?
-          if (_.has(req.headers, this.headers.ignoreCheck) &&
-                    req.headers[this.headers.ignoreCheck]) {
-            // debug message
-            this.logger.debug('[ Jswt.isAuthorized ] - ignore check header was sent. got to next');
-            // return here beacause ignore was set
-            return next();
-          }
+      if (isAllowedRoutes || this.ipIsAllowed(ip)) {
+        // get token in headers
+        var token = req.get(this.headers.access.toLowerCase());
 
-          // debug message
-          this.logger.debug('[ Jswt.isAuthorized ] - checking access on server.');
-          // get token
-          var token = req.get(this.headers.access.toLowerCase());
+        // token is undefined ?
+        if (!_.isUndefined(token)) {
 
-          // token is undefined ?
-          if (_.isUndefined(token)) {
-            // send unauthorized
-            return res.status(403).send('You d\'ont have access to this ressource.').end();
-          } else {
-            // process verify
-            this.verify(token).then(function (decoded) {
-              // all is ok so check key content
-              var akey  = crypto.createHash('sha1').update(this.getPublicKey()).digest('hex');
-              var bkey  = utils.crypto.decrypt(akey, decoded.key.toString());
+          // process verify
+          this.verify(token).then(function (decoded) {
+            // is not an json request ?
+            if (!req.is('application/json')) {
 
-              // is valid bkey
-              if (bkey !== false) {
-                // verify
-                pem.verify(this.secureKeys.certificate,
-                           this.secureKeys.clientKey).then(function () {
-                  // debug message
-                  this.logger.debug('[ Jswt.isAuthorized ] - given token seems to be valid');
-                  // all is ok so next process
-                  return next();
-                }.bind(this)).catch(function (error) {
-                  // log warning message
-                  this.logger.error([ '[ Jswt.isAuthorized ] - ', error ].join(' '));
-                  // invalid key
-                  return res.status(403).send('Invalid Token.');
-                }.bind(this));
-              } else {
+              // debug message
+              this.logger.debug('[ Jswt.isAuthorized ] - valid token, but not application/json');
+
+              // next statement
+              return next();
+            }
+
+            // all is ok so check key content
+            var akey  = crypto.createHash('sha1').update(this.getPublicKey()).digest('hex');
+            var bkey  = utils.crypto.decrypt(akey, decoded.key.toString());
+
+            // is valid bkey
+            if (bkey !== false) {
+              // verify
+              pem.verify(this.secureKeys.certificate,
+                         this.secureKeys.clientKey).then(function () {
+                // debug message
+                this.logger.debug('[ Jswt.isAuthorized ] - given token seems to be valid');
+                // all is ok so next process
+                return next();
+              }.bind(this)).catch(function (error) {
+                // log warning message
+                this.logger.error([ '[ Jswt.isAuthorized ] - ', error ].join(' '));
                 // invalid key
-                return res.status(403).send('Invalid Token.');
-              }
-            }.bind(this)).catch(function (error) {
-              // is expired ?
-              if (_.has(error, 'expiredAt')) {
-                // refresh token error
-                return res.status(403).send('Token has expired.');
-              }
-              // send unauthorized
-              return res.status(403).send([ 'Cannot validate your access.',
-                                            'Please retry.' ].join(' ')).end();
-            }.bind(this));
-          }
-        } else {
-          // next statement
+                return res.status(403).send('Invalid Token AAAA.');
+              }.bind(this));
+            } else {
+              // invalid key
+              return res.status(403).send('Invalid Token BBB.');
+            }
+          }.bind(this)).catch(function (error) {
+            // is expired ?
+            if (_.has(error, 'expiredAt')) {
+              // refresh token error
+              return res.status(403).send('Token has expired.');
+            }
+            // send unauthorized
+            return res.status(403).send([ 'Cannot validate your access.',
+                                          'Please retry.' ].join(' ')).end();
+          }.bind(this));
+        } else if (isAllowedRoutes) {
+          // is an allowed routes so next statement
           return next();
+        } else {
+
+          // log incomming error
+          this.logger.error('[ Jswt.isAuthorized ] - request to url : ' + req.url +
+          ' for IP : ' + ip + ' try to access route but is not an allowed routes and is not and' +
+          ' have no request token');
+
+          // send unauthorized
+          return res.status(403).send('You are not allowed to access to this ressource.').end();
         }
       } else {
 
@@ -478,13 +482,6 @@ Jswt.prototype.autoDecryptRequest = function () {
   return function (req, res, next) {
     // is json
     if (req.is('application/json')) {
-      // has ignore header ?
-      if (_.has(req.headers, this.headers.ignore) && req.headers[this.headers.ignore]) {
-        // debug message
-        this.logger.debug('[ Jswt.autoDecryptRequest ] - ignore header was sent. got to next');
-        // return here beacause ignore was set
-        return next();
-      }
 
       // continue
       // debug message
@@ -667,7 +664,7 @@ Jswt.prototype.verify = function (data, remove) {
     // error message
     this.logger.error([ '[ Jswt.verify ] - Cannot cerify your data :', error ].join(' '));
     // reject
-    deferred.reject('Cannot cerify your data.');
+    deferred.reject('Cannot certify your data.');
   }
 
   // default promise
