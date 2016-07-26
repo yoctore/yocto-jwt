@@ -3,6 +3,7 @@
   - if autodecrypt() fail, the next() middleware was called, now an response HTTP 403 will be send
 - Improvement :
   - All request should have an header 'x-jwt-access-token' even GET request expect allowedRoutes wich token was not required.
+  - Migrate to Lodash -> 4.14.0
 
 ## 1.7.1 (2016-07-20)
 - Bug fixe :

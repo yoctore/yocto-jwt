@@ -296,7 +296,7 @@ Jswt.prototype.isAllowedRoutes = function (url) {
 Jswt.prototype.ipIsAllowed = function (ip) {
 
   // Remove unecessarry data
-  ip = _.trimLeft(ip, '::ffff:');
+  ip = _.trimEnd(ip, '::ffff:');
 
   // current regexp ip
   var submask = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})$/;
@@ -322,7 +322,7 @@ Jswt.prototype.ipIsAllowed = function (ip) {
       }
     } else {
       // if not a submask so check directly if ip is on list or if is wilcard
-      allowed = _.contains(this.ips, ip) || ips === '*';
+      allowed = _.includes(this.ips, ip) || ips === '*';
     }
     // stop when found
     return allowed ? false : true;
@@ -450,7 +450,7 @@ Jswt.prototype.autoEncryptRequest = function () {
       var mtds  = [ 'json', 'jsonp' ];
 
       // parse methods to process
-      _.each(mtds, function (m) {
+      _.forEach(mtds, function (m) {
         // rebuild jsonp
         var mcall  = res[m];
 
@@ -465,7 +465,7 @@ Jswt.prototype.autoEncryptRequest = function () {
           // default statement
           return mcall.call(this, [ context.sign(body) ]);
         };
-      }, this);
+      }.bind(this));
     }
     // next statement
     return next();
