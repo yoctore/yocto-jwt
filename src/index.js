@@ -509,8 +509,8 @@ Jswt.prototype.autoDecryptRequest = function () {
         }.bind(this)).catch(function (error) {
           // log message
           this.logger.error([ '[ Jswt.autoDecryptRequest ] -', error ].join(' '));
-          // next statement
-          next();
+          // Send an error to client because data was not signed
+          return res.status(403).send('You d\'ont have access to this ressource.').end();
         }.bind(this));
       } else {
         // next process
