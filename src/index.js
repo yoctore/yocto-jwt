@@ -296,7 +296,7 @@ Jswt.prototype.isAllowedRoutes = function (url) {
 Jswt.prototype.ipIsAllowed = function (ip) {
 
   // Remove unecessarry data
-  ip = _.trimEnd(ip, '::ffff:');
+  ip = _.trimStart(ip, '::ffff:');
 
   // current regexp ip
   var submask = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})$/;
