@@ -11,7 +11,7 @@ var path      = require('path');
  * Manage Pem & Cert management
  */
 function Pem () {
-  // default pem state without pem generating
+  // Default pem state without pem generating
   this.state = false;
 }
 
@@ -21,31 +21,34 @@ function Pem () {
  * @return {Object} default promise to catch
  */
 Pem.prototype.processJwt = function () {
-  // create default async process
+  // Create default async process
   var deferred = Q.defer();
 
-  // create certificate
-  pem.createCertificate({ days : 1, selfSigned : true }, function (error, keys) {
-    // default keys to return
+  // Create certificate
+  pem.createCertificate({
+    days       : 1,
+    selfSigned : true
+  }, function (error, keys) {
+    // Default keys to return
     var bkeys = {};
-    // has error ?
-    if (!error) {
 
-      // create path of the file into cwd()
+    // Has error ?
+    if (!error) {
+      // Create path of the file into cwd()
       var pathFilePK = path.normalize(process.cwd() + '/cert-jwt.tmp');
       var pathLockFile = path.normalize(process.cwd() + '/cert-jwt.lock');
 
       // Try to create an lockFile, it's usefull for Cluster mode to use the same pem file
       lockFile.lock(pathLockFile, function (error) {
-
         /**
          * Method to set Pem file into jwt
          *
          * @param {Object} error Optional error if fs method fails
          * @param {value} value Optional data for fs readFile fn
+         * @return {Object} result of promise
          */
         var setPemCb = function (error, value) {
-          // check error
+          // Check error
           if (error) {
             // An error occured so reject it
             return deferred.reject(error);
@@ -54,43 +57,44 @@ Pem.prototype.processJwt = function () {
           // Check if value exsit
           keys = _.isUndefined(value) ? keys : JSON.parse(value);
 
-          // merge secure keys
+          // Merge secure keys
           _.merge(bkeys, keys);
 
-          // generate public key
+          // Generate public key
           pem.getPublicKey(keys.certificate, function (error, pem) {
-            // has error ?
+            // Has error ?
             if (!error) {
-              // add new item
+              // Add new item
               _.merge(bkeys, pem);
 
-              // change state before resolve
+              // Change state before resolve
               this.state = true;
 
-              // ok resolve with builded keys
+              // Ok resolve with builded keys
               deferred.resolve(bkeys);
             } else {
-              // reject error occured
+              // Reject error occured
               deferred.reject(error);
             }
           }.bind(this));
         }.bind(this);
 
-        // check if file already exist
+        // Check if file already exist
         if (error) {
-          // file exist so read them
+          // File exist so read them
           fs.readFile(pathFilePK, setPemCb);
         } else {
-          // file not exist so create them
+          // File not exist so create them
           fs.writeFile(pathFilePK, JSON.stringify(keys), setPemCb);
         }
       }.bind(this));
     } else {
-      // reject error occured
+      // Reject error occured
       deferred.reject(error);
     }
   }.bind(this));
-  // return default promise
+
+  // Return default promise
   return deferred.promise;
 };
 
@@ -102,31 +106,31 @@ Pem.prototype.processJwt = function () {
  * @return {Object} default promise to catch
  */
 Pem.prototype.verify = function (cert, key) {
-  // create default async process
+  // Create default async process
   var deferred = Q.defer();
 
-  // verify
+  // Verify
   pem.getModulus(cert, function (error, certModulus) {
-    // has error ?
+    // Has error ?
     if (error) {
-      // reject an error occured
+      // Reject an error occured
       deferred.reject(error);
     } else {
-      // get second modulus for matching
+      // Get second modulus for matching
       pem.getModulus(key, function (error, keyModulus) {
-        // is valid ?
+        // Is valid ?
         if (!error && certModulus.modulus === keyModulus.modulus) {
-          // all is ok resolve
+          // All is ok resolve
           deferred.resolve();
         } else {
-          // reject
-          deferred.reject((!error ? 'certificate not match with given key' : error));
+          // Reject
+          deferred.reject(!error ? 'certificate not match with given key' : error);
         }
       });
     }
   });
 
-  // return default promise
+  // Return default promise
   return deferred.promise;
 };
 
@@ -136,9 +140,9 @@ Pem.prototype.verify = function (cert, key) {
  * @return {Boolean} true if all is ok false otherwise
  */
 Pem.prototype.isReady = function () {
-  // current state
+  // Current state
   return this.state;
 };
 
 // Default export
-module.exports = new (Pem)();
+module.exports = new Pem();

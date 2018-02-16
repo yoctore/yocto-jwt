@@ -28,15 +28,15 @@ describe('Algorithm ->', function () {
   });
 
   it ('At this time load must succeed', function (done) {
-    c.load().then(function () {
-      expect(true).to.be.a.boolean;
+    c.load().then(function (v) {
+      expect(true).to.be.a('boolean');
       done();
     });
   });
 
   it ('Set key must return true', function () {
     var state = c.setKey(key);
-    expect(state).to.be.a.boolean;
+    expect(state).to.be.a('boolean');
     expect(state).to.be.equal(true);
   });
 
@@ -59,7 +59,7 @@ describe('Algorithm ->', function () {
 
   _.each(['10.0.0.10', '126.32.32.12' ], function (h) {
     it ([ 'Ip must be allowed for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
-      expect(c.ipIsAllowed(h)).to.be.a.boolean;
+      expect(c.ipIsAllowed(h)).to.be.a('boolean');
       expect(c.ipIsAllowed(h)).to.be.equal(true);
       done();
     });
@@ -67,7 +67,7 @@ describe('Algorithm ->', function () {
 
   _.each(['18.0.0.10', '99.32.32.12' ], function (h) {
     it ([ 'Ip must be refused for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
-      expect(c.ipIsAllowed(h)).to.be.a.boolean;
+      expect(c.ipIsAllowed(h)).to.be.a('boolean');
       expect(c.ipIsAllowed(h)).to.be.equal(false);
       done();
     });
@@ -75,7 +75,7 @@ describe('Algorithm ->', function () {
 
   _.each([ '/auth/connect/standard/token=fefefoihfrognrgzrnglzknrzglrzkgnrgrzggzmjzr', '/auth/connect/', '/server/help' ], function (h) {
     it ([ 'Routes must be allowed for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
-      expect(c.isAllowedRoutes(h)).to.be.a.boolean;
+      expect(c.isAllowedRoutes(h)).to.be.a('boolean');
       expect(c.isAllowedRoutes(h)).to.be.equal(true);
       done();
     });
@@ -83,7 +83,7 @@ describe('Algorithm ->', function () {
 
   _.each([ '/test/test', '/server/details' ], function (h) {
     it ([ 'Route must be refused for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
-      expect(c.isAllowedRoutes(h)).to.be.a.boolean;
+      expect(c.isAllowedRoutes(h)).to.be.a('boolean');
       expect(c.isAllowedRoutes(h)).to.be.equal(false);
       done();
     });
@@ -98,13 +98,13 @@ describe('Algorithm ->', function () {
     signed = c.sign(data, { algorithm : c.usedAlgorithm });
     expect(signed).to.be.a.string;
     expect(signed).to.be.not.empty;
-    expect(c.decode(signed)).to.be.an.object;
+    expect(c.decode(signed)).to.be.an('object');
     expect(c.decode(signed)).to.be.not.empty;
   });
 
   it ('Sign data must be verified', function (done) {
     var verify = c.verify(signed).then(function (dec) {
-      expect(dec).to.be.an.object;
+      expect(dec).to.be.an('object');
       expect(dec).to.be.not.empty;
       done();
     });

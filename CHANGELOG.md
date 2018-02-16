@@ -1,3 +1,8 @@
+## 3.0.0 (2018-02-16)
+
+- Major update of all dependencies
+- Update node version engine to >= 8.9.4
+
 ## 2.0.0 (2016-07-26)
 - Bug fixe :
   - use trimStart() instead of trimLeft()
