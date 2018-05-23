@@ -500,6 +500,12 @@ Jswt.prototype.autoEncryptRequest = function () {
 Jswt.prototype.autoDecryptRequest = function () {
   // Default statement
   return function (req, res, next) {
+    // Check if should not decrypt
+    if (this.isAllowedRoutes(req.url)) {
+      // Is Allowed route so dont decrypt body beacause was not encoded
+      return next();
+    }
+
     // Is json
     if (req.is('application/json')) {
       // Continue
