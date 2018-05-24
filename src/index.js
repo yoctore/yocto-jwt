@@ -104,6 +104,13 @@ function Jswt (logger) {
    * @type {Array}
    */
   this.allowedRoutes = [];
+
+  /**
+   * Array of routes that body will not be autodecrypted
+   *
+   * @type {Array}
+   */
+  this.ignoreDecryptRoutes = [];
 }
 
 /**
@@ -263,17 +270,39 @@ Jswt.prototype.addAllowedRoutes = function (allowedRoutes) {
 };
 
 /**
- * Default method to check if the route of current request is allowed
+ * An utility method to add routes that will not be decrypted in process
+ *
+ * @param {Array|String} routes array of regexp route to allow
+ */
+Jswt.prototype.addIgnoreDecryptRoutes = function (routes) {
+  // Normalize routes add action
+  this.ignoreDecryptRoutes = _.uniq(_.flatten([ this.ignoreDecryptRoutes, _.isArray(routes) ?
+    routes : [ routes ] ]));
+};
+
+/**
+ * Default method to check if the route of current request is allowed into specified array
  *
  * @param {Object} url url to check
+ * @param {String} arrayName the name of array to check
  * @return {Boolean} true if is allowed false otherwise
  */
-Jswt.prototype.isAllowedRoutes = function (url) {
+Jswt.prototype.routeIsInArray = function (url, arrayName) {
   // Var used to determine if the route was allowed
   var allowed = false;
 
+  // Check if array exist
+  if (!_.has(this, arrayName)) {
+    // Array not found so return false
+    this.logger.error('[ Jswt.routeIsInArray ] - the Array [ ' + arrayName + ' ] was ' +
+    'not found');
+
+    // Not found
+    return false;
+  }
+
   // Parse all allowed routes
-  _.every(this.allowedRoutes, function (route) {
+  _.every(_.get(this, arrayName), function (route) {
     try {
       // Retrieve the regexp
       route = _.isRegExp(route) ? route : new RegExp(route);
@@ -284,8 +313,9 @@ Jswt.prototype.isAllowedRoutes = function (url) {
         allowed = true;
 
         // Log incomming error
-        this.logger.debug('[ Jswt.isAllowedRoutes ] - the url ' + url +
-        ' was authorized to connect without jwt validation with patern : ' + route);
+        this.logger.debug('[ Jswt.routeIsInArray ] - the url ' + url + ' is in array [ ' +
+        arrayName + ' ] so URL is authorized to connect without jwt OR body will not be ' +
+        'decrypted beacause following patern match : ' + route);
 
         // Return false to break the _.every
         return false;
@@ -301,6 +331,26 @@ Jswt.prototype.isAllowedRoutes = function (url) {
 
   // Default statement
   return allowed;
+};
+
+/**
+ * Check if is allowed route
+ * @param  {String} url url to check
+ * @return {Boolean} is allowed
+ */
+Jswt.prototype.isAllowedRoutes = function (url) {
+  // Check if is allowed
+  return this.routeIsInArray(url, 'allowedRoutes');
+};
+
+/**
+ * Check if is route will not be decrypted
+ * @param  {String} url url to check
+ * @return {Boolean} is allowed
+ */
+Jswt.prototype.isIgnoredDecryptRoute = function (url) {
+  // Check if is allowed
+  return this.routeIsInArray(url, 'ignoreDecryptRoutes');
 };
 
 /**
@@ -368,7 +418,7 @@ Jswt.prototype.isAuthorized = function () {
       this.logger.debug('[ Jswt.isAuthorized ] - a new request incoming into url : ' + req.url +
       ' - from IP : ' + ip);
 
-      // Save result of is allowed routes
+      // Check if is allowed route
       var isAllowedRoutes = this.isAllowedRoutes(req.url);
 
       // Ip is allowed or route is allowed ?
@@ -501,7 +551,7 @@ Jswt.prototype.autoDecryptRequest = function () {
   // Default statement
   return function (req, res, next) {
     // Check if should not decrypt
-    if (this.isAllowedRoutes(req.url)) {
+    if (this.isIgnoredDecryptRoute(req.url)) {
       // Is Allowed route so dont decrypt body beacause was not encoded
       return next();
     }

@@ -57,6 +57,14 @@ describe('Algorithm ->', function () {
       });
   });
 
+  _.each([ '/auth/connect', '/auth/external' , [ '/server\/status/', '/server\/help' ]], function (i) {
+      it ([ 'Setting Ignored routes to decrypt must succeed and contains those value :', i ].join(' '), function (done) {
+        c.addIgnoreDecryptRoutes(i);
+        expect(c.ignoreDecryptRoutes).to.include.members(_.flatten([ i ]));
+        done();
+      });
+  });
+
   _.each(['10.0.0.10', '126.32.32.12' ], function (h) {
     it ([ 'Ip must be allowed for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
       expect(c.ipIsAllowed(h)).to.be.a('boolean');
@@ -85,6 +93,22 @@ describe('Algorithm ->', function () {
     it ([ 'Route must be refused for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
       expect(c.isAllowedRoutes(h)).to.be.a('boolean');
       expect(c.isAllowedRoutes(h)).to.be.equal(false);
+      done();
+    });
+  });
+
+  _.each([ '/auth/connect/standard/token=fefefoihfrognrgzrnglzknrzglrzkgnrgrzggzmjzr', '/auth/connect/', '/auth/external' ], function (h) {
+    it ([ 'Routes must be not decrypted for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
+      expect(c.isIgnoredDecryptRoute(h)).to.be.a('boolean');
+      expect(c.isIgnoredDecryptRoute(h)).to.be.equal(true);
+      done();
+    });
+  });
+
+  _.each([ '/test/test', '/server/details' ], function (h) {
+    it ([ 'Route must be autodecrypted for these value :', utils.obj.inspect(h) ].join(' '), function (done) {
+      expect(c.isIgnoredDecryptRoute(h)).to.be.a('boolean');
+      expect(c.isIgnoredDecryptRoute(h)).to.be.equal(false);
       done();
     });
   });
